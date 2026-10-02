@@ -3,6 +3,11 @@ TGC GameJam 2026 Project
 
 **Light Handler** - a 2D browser game built with [Phaser 4](https://phaser.io/), Vite and TypeScript.
 
+## Plans
+
+- [Game plan](docs/GAME_PLAN.md) - design, scope, milestones
+- [Team plan](docs/TEAM_PLAN.md) - roles and day-by-day tasks for 5 people
+
 ## Running the game
 
 Requires [Node.js](https://nodejs.org/) 22 or newer.
