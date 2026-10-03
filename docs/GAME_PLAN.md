@@ -8,9 +8,9 @@ See also: [Team plan](TEAM_PLAN.md) for who does what.
 
 ## How we reach 15-20 minutes in 3 days
 
-Content is **data, not code**. A level is a "comic page" made of 3-4 **panels** (arena rooms). Each panel is a list of monster waves in a config file. Clear a panel and the camera slides to the next one. Dying restarts the current panel only, so playtime stays predictable.
+Content is **data, not code**. A level is a "comic page" made of 3-4 **rooms** (arenas). Each room is a list of monster waves in a config file. Clear a room and the camera slides to the next one. Dying restarts the current room only, so playtime stays predictable.
 
-| Level | Comic style | New radiation | New monster | Panels | Target time |
+| Level | Comic style | New radiation | New monster | Rooms | Target time |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Golden Age (bright, flat colours) | Radio, Infrared | Swarmlet, Frostling | 3 | 3 min |
 | 2 | Noir (black and white, dark) | Ultraviolet | Shade | 3 | 3.5 min |
@@ -63,9 +63,20 @@ This is the proposal's main hook: each level's look also changes a rule.
 
 All of these filters ship in Phaser 4.2.1 (`camera.filters.internal.addQuantize`, `addColorMatrix`, `addVignette`, `addThreshold`, `addPixelate`), so no custom shader code is required.
 
-### Twist (proposed, the team can swap it)
+### Twist
 
-The comic styles were the machine's lens, not the world. After the boss, all filters drop and the "monsters" are shown as yellow circles identical to the player: other Light Handlers. It costs almost nothing to build because everything is shapes.
+The Light Handler has schizophrenia. There were never any monsters or an EMW Machine: he has been shining a torch at random people in public, and he is arrested for causing mild annoyance.
+
+How the ending plays out:
+
+1. The boss goes down and every comic filter drops. The world is shown in plain, flat colours for the first time.
+2. The "monsters" are redrawn as ordinary passers-by (plain grey circles), squinting and shielding their eyes. The EMW Machine is a pocket torch with one dim yellow beam; keys 1-4 no longer do anything.
+3. The Prism's flashing colour phases turn out to be a police car's lights. An officer walks up and the player's controls are taken away.
+4. Final card, deadpan: an arrest report card, "Charge: causing mild annoyance to the public."
+
+Earlier levels can foreshadow this cheaply: monsters never attack first in the level 1 tutorial room, Ironclad "bullets" are people throwing things back, and level intro text is written in the Handler's confident voice so the report card contrasts with it.
+
+It costs almost nothing to build because everything is shapes: swap colours, remove filters, show two text cards.
 
 ### Audio
 
@@ -92,8 +103,8 @@ The existing player code in `src/scenes/Game.ts` moves into `entities/Player.ts`
 | When | Milestone | Done means |
 | --- | --- | --- |
 | Day 1, first 2 hours | Contracts | `types.ts`, `events.ts` and the level data format agreed and merged |
-| Day 1 end | Core loop | One panel: move, aim, fire 2 radiations at 2 monsters, take damage, die, restart |
-| Day 2 midday | All systems | 4 radiations, 4 monsters, style filters, HUD, panel progression |
+| Day 1 end | Core loop | One room: move, aim, fire 2 radiations at 2 monsters, take damage, die, restart |
+| Day 2 midday | All systems | 4 radiations, 4 monsters, style filters, HUD, room progression |
 | Day 2 end | Full run | All 5 levels playable start to finish, unbalanced; first timed playthrough |
 | Day 3 midday | **Feature freeze** | Boss, ending, audio, menus in; only fixes and balance after this |
 | Day 3, 3 hours before deadline | Submit | Build uploaded and tested from the upload page; the remaining time is buffer |

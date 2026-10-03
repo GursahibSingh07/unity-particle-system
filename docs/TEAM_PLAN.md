@@ -16,7 +16,7 @@ Roles are lettered; the team decides who takes which. Role A fits whoever owns t
 
 | Role | Owns | Files |
 | --- | --- | --- |
-| **A. Lead and core** | Game loop, scene flow, player, panel progression, merging, builds | `types.ts`, `events.ts`, `main.ts`, `scenes/Game.ts`, `entities/Player.ts`, `systems/WaveDirector.ts` |
+| **A. Lead and core** | Game loop, scene flow, player, room progression, merging, builds | `types.ts`, `events.ts`, `main.ts`, `scenes/Game.ts`, `entities/Player.ts`, `systems/WaveDirector.ts` |
 | **B. Weapons** | The EMW Machine: 4 radiations, energy, damage table, hit feedback | `systems/EMWMachine.ts`, `systems/Combat.ts`, `config/radiation.ts` |
 | **C. Monsters and AI** | Monster base, 4 behaviours, boss, spawn telegraphs | `entities/Monster.ts`, `entities/behaviours/`, `config/monsters.ts` |
 | **D. Visual style** | Per-level filters and rule changes, shape look for every entity, particles, screen shake, transitions | `systems/StyleManager.ts`, `config/styles.ts` |
@@ -28,11 +28,11 @@ All paths are under `src/`.
 
 ### Day 1: core loop
 
-Goal by end of day: one panel where you can move, aim, fire 2 radiations at 2 monsters, take damage, die and restart.
+Goal by end of day: one room where you can move, aim, fire 2 radiations at 2 monsters, take damage, die and restart.
 
 | Role | Tasks |
 | --- | --- |
-| **A** | Contracts session with everyone (first 2 hours). Extract `Player` from `scenes/Game.ts`. Panel walls, health, death and restart. WaveDirector reading level data. |
+| **A** | Contracts session with everyone (first 2 hours). Extract `Player` from `scenes/Game.ts`. Room walls, health, death and restart. WaveDirector reading level data. |
 | **B** | Radio and Infrared firing, energy bar logic, damage table. |
 | **C** | Monster base class, Swarmlet and Frostling, contact damage. |
 | **D** | Shape and colour language for player and monsters. Golden Age and Noir filters. |
@@ -44,10 +44,10 @@ Goal by end of day: all 5 levels playable start to finish, unbalanced, with a fi
 
 | Role | Tasks |
 | --- | --- |
-| **A** | Camera slide between panels, level-to-level flow, checkpoints, pause. Integrate everyone's work at each sync point. |
+| **A** | Camera slide between rooms, level-to-level flow, checkpoints, pause. Integrate everyone's work at each sync point. |
 | **B** | Ultraviolet and Gamma. Hooks so styles can change fire rate, heat and aim snapping. |
 | **C** | Shade and Ironclad (with bullets), spawn telegraphs, The Prism boss. |
-| **D** | Manga and 8-bit filters plus their rule changes (with B). Particles, screen shake, panel transition. |
+| **D** | Manga and 8-bit filters plus their rule changes (with B). Particles, screen shake, room transition. |
 | **E** | Wave data for levels 2-5, level intro text, sound effects and music wired in, first timed playthrough. |
 
 ### Day 3: polish and ship
