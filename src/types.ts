@@ -2,7 +2,10 @@
 
 export type RadiationId = 'radio' | 'infrared' | 'ultraviolet' | 'gamma';
 export type MonsterId = 'swarmlet' | 'frostling' | 'shade' | 'ironclad' | 'prism';
-export type StyleId = 'goldenAge' | 'noir' | 'manga' | 'eightBit' | 'finalPage';
+/** Styles that have their own palette; every sprite is baked once per ArtStyle */
+export type ArtStyle = 'goldenAge' | 'noir' | 'manga' | 'plain';
+/** A level's style. `finalPage` is the boss, which cycles through the art styles. */
+export type StyleId = ArtStyle | 'finalPage';
 
 export interface RadiationDef {
     id: RadiationId;
@@ -44,24 +47,35 @@ export interface WaveDef {
     delay?: number;
 }
 
-/** Position and size in pixels, measured from the room's top-left corner */
-export interface WallDef {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
-
 export interface RoomDef {
-    walls?: WallDef[];
+    /** 10 strings of 20 characters; the legend is in docs/DESIGN.md and src/systems/roomLayout.ts */
+    layout: string[];
     waves: WaveDef[];
+    /** A chest appears on the C tile when the room is cleared, holding this radiation */
+    reward?: RadiationId;
+    /** The only radiation that breaks this room's S (secret wall) tiles */
+    secret?: RadiationId;
 }
 
 export interface LevelDef {
     name: string;
     style: StyleId;
-    /** Radiation types the player can use in this level */
+    /**
+     * Radiation types the player has on entering this level. In a normal playthrough the
+     * player's unlocked set (src/state.ts) is used; this is the fallback for dev jumps.
+     */
     radiations: RadiationId[];
-    introText?: string;
+    /** Lines shown as a caption card when the level begins */
+    introText?: string[];
     rooms: RoomDef[];
+}
+
+/** One Field Guide page */
+export interface GuideEntry {
+    /** The Handler's name for it */
+    title: string;
+    /** His confident field note, shown during the game */
+    note: string;
+    /** What it really was, shown after the ending */
+    truth: string;
 }

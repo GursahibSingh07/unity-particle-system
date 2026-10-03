@@ -2,23 +2,26 @@
 
 TGC GameJam 2026. Built with Phaser 4, Vite and TypeScript.
 
-**Constraints:** 3 days to submission, 15-20 minutes of gameplay, art from shapes and shaders only.
+**Constraints** (from [rules.md](rules.md)): 100-hour jam, a complete loop of 10-15 minutes, browser build on itch.io, all assets free/open and credited, AI use disclosed.
 
-See also: [Team plan](TEAM_PLAN.md) for who does what.
+See also: [Design bible](DESIGN.md) for the current art, audio and data contracts, and [Team plan](TEAM_PLAN.md) for who does what.
 
-## How we reach 15-20 minutes in 3 days
+> Scope was cut on 3 October 2026 to fit the 10-15 minute rule: the 8-bit level is dropped, and the look moved from plain shapes to code-made pixel art with a top-down Zelda feel. Where this file and DESIGN.md disagree, DESIGN.md wins.
 
-Content is **data, not code**. A level is a "comic page" made of 3-4 **rooms** (arenas). Each room is a list of monster waves in a config file. Clear a room and the camera slides to the next one. Dying restarts the current room only, so playtime stays predictable.
+## How we reach 10-15 minutes
 
-| Level | Comic style | New radiation | New monster | Rooms | Target time |
+Content is **data, not code**. A level is a "comic page" made of 3 **rooms** (arenas). Each room is a tile layout plus a list of monster waves in a config file. Clear a room and the camera slides to the next one. Dying restarts the current room only, so playtime stays predictable.
+
+| Part | Comic style | You gain | New monster | Rooms | Target time |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Golden Age (bright, flat colours) | Radio, Infrared | Swarmlet, Frostling | 3 | 3 min |
-| 2 | Noir (black and white, dark) | Ultraviolet | Shade | 3 | 3.5 min |
-| 3 | Manga (high contrast, speed lines) | Gamma | Ironclad | 3 | 3.5 min |
-| 4 | 8-bit (pixelated) | none, mixed waves | none | 4 | 4 min |
-| 5 | Final page (styles swap per boss phase) | none | Boss: The Prism | 1 | 3 min |
+| Cover + intro | Comic cover as title screen | Radio | - | - | 0.5 min |
+| Level 1 | Golden Age (bright, flat colours) | Infrared | Swarmlet, Frostling | 3 | 2.5 min |
+| Level 2 | Noir (black and white, dark) | Ultraviolet | Shade | 3 | 3 min |
+| Level 3 | Manga (high contrast, speed lines) | Gamma | Ironclad | 3 | 3 min |
+| Boss | Styles swap per phase | - | The Prism | 1 | 2.5 min |
+| Ending | Filters drop, the arrest | - | - | - | 1 min |
 
-Plus about 1.5 minutes of intro, between-level and ending text: **about 18.5 minutes total**.
+**About 12.5 minutes total.**
 
 ## Core design
 

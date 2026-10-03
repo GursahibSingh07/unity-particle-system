@@ -1,0 +1,117 @@
+import type { GuideEntry, MonsterId, RadiationId } from '../types';
+
+// All player-facing words live here so they can be edited in one place.
+// Captions are shown one line at a time in a comic caption box: keep each string to about
+// 60 characters. Level intro captions live with each level in src/config/levels.
+
+export const TITLE = {
+    name: 'LIGHT HANDLER',
+    tagline: 'He sees what no one else can!',
+    prompt: 'Press any key',
+};
+
+/**
+ * Field Guide pages. Each `note` is the Handler's own, and is also literally true of what
+ * the thing really was; `truth` is the same fact as the attending officer wrote it down.
+ */
+export const GUIDE: Record<MonsterId, GuideEntry> = {
+    swarmlet: {
+        title: 'Swarmlet',
+        note: 'Small, grey, always in a flock. They crowd my feet. One loud pulse and they scatter.',
+        truth: 'Pigeons. They flew off when the subject ran at them. None harmed.',
+    },
+    frostling: {
+        title: 'Frostling',
+        note: 'Slow. It pushes its cold ahead of it and keeps on coming. Heat is its ruin.',
+        truth: 'Ice-cream vendor with a cart. Followed the subject to ask him to stop. Some stock melted.',
+    },
+    shade: {
+        title: 'Shade',
+        note: 'You do not see it until the light is on its face. Then it stops dead.',
+        truth: 'Man in a dark coat, walking home at dusk. Stopped when a torch was shone in his eyes.',
+    },
+    ironclad: {
+        title: 'Ironclad',
+        note: 'A hard shell on top. It keeps its distance, winds up, and throws things at me.',
+        truth: 'Cyclist wearing a helmet. Threw a water bottle. Has been spoken to about that.',
+    },
+    prism: {
+        title: 'The Prism',
+        note: 'It wails. Red, then blue, then red. Of all the people here, it came for me.',
+        truth: 'Police patrol car, lights and siren on. Sent after several calls from the public.',
+    },
+};
+
+/** Shown when a radiation type is found in a chest */
+export const ITEM_GET: Record<RadiationId, { title: string; line: string }> = {
+    radio: { title: 'RADIO', line: 'Press 1, then click: a pulse bursts all around you.' },
+    infrared: { title: 'INFRARED', line: 'Press 2, then hold the button: a steady beam of heat.' },
+    ultraviolet: { title: 'ULTRAVIOLET', line: 'Press 3, then click: a flash that shows what hides.' },
+    gamma: { title: 'GAMMA', line: 'Press 4. Hold to charge, release: nothing stops it.' },
+};
+
+/** Comic sound words that pop up on a hit: the player learns weaknesses from these */
+export const ONOMATOPOEIA = {
+    weak: ['FZZZT!', 'KRAKK!', 'ZZAP!', 'SKREEE!', 'BLAZAM!', 'KZZRT!'],
+    normal: ['pow', 'bap', 'thwap', 'zot', 'whap'],
+    resist: ['tink', 'plink', 'pff', 'tik', 'dink'],
+};
+
+export const BANNERS = {
+    roomCleared: 'Panel cleared!',
+    roomFailed: 'Our hero falls! Once more...',
+    secret: 'A hidden panel!',
+    /** Added: for the end of a level, when the page turns */
+    levelCleared: 'Page turned!',
+};
+
+/** Caption lines for the ending, shown one at a time */
+export const ENDING = {
+    /** The comic styles drop away; narration, now in a plain voice */
+    reveal: [
+        'The Prism goes dark. So does everything else.',
+        'The colours settle. It is an ordinary afternoon.',
+        'A town square. A fountain. People rubbing their eyes.',
+        'In his hand: a small pocket torch.',
+    ],
+    /** The officer, patient throughout */
+    arrest: [
+        '"Afternoon, sir. That\'s a bright little torch."',
+        '"Could you point it at the ground for me? Thank you."',
+        '"A few people rang us. Nobody\'s hurt. A bit dazzled."',
+        '"You\'re not in trouble. Well. A very small amount."',
+        '"The city? Yes. It\'s safe. You can stand down now."',
+        '"Come and sit in the car. We\'ve rung your sister."',
+        '"Keep hold of the torch if you like. Just switch it off."',
+    ],
+    /** The arrest report card: one entry per line on the card */
+    report: [
+        'INCIDENT REPORT',
+        'Place: Market Square, by the fountain.',
+        'Time: 3.40 pm. Weather: bright.',
+        'Subject: Adult male. Gives name as "the Light Handler".',
+        'Item: One pocket torch. Batteries low.',
+        'Reported by: An ice-cream vendor. A cyclist.',
+        'Also: A man in a dark coat. Pigeons (no statement).',
+        'Injuries: None. Some squinting.',
+        'Manner: Polite. Asked if the city was safe. Told yes.',
+        'Action: Arrested. Driven home. Sister present.',
+        'Property: Torch returned to subject.',
+        'CHARGE: Causing mild annoyance to the public.',
+    ],
+    guideHeading: 'FIELD GUIDE (as corrected by the attending officer)',
+    credits: [
+        'LIGHT HANDLER',
+        'Made for TGC GameJam 2026',
+        '',
+        'Gursahib Singh',
+        'Abhishek Bhadiyadra',
+        'Shardul Kholam',
+        'Laveena Jain',
+        'Harshil Soni',
+        '',
+        'Art and music are generated by the game\'s own code. AI tools were used: see CREDITS.md.',
+        'No pigeons were dazzled in the making of this game.',
+        'Thank you for playing.',
+    ],
+};
