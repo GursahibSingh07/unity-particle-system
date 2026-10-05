@@ -32,6 +32,10 @@ const ERA_RAY: Record<ArtStyle, RayId> = {
 /** How far above its centre the coming era is shown */
 const BADGE_LIFT = 11;
 const BADGE_RADIUS = 5;
+/** Half a beat of the soft white pulse while it is shielded after a switch */
+const SHIELD_PULSE_MS = 160;
+/** Screened over the sprite on the pulse: lightens it towards white but keeps its detail */
+const SHIELD_WASH = 0x707070;
 
 /**
  * The boss. A loop of three attacks: it dashes at the player, dashes again, then switches the
@@ -58,6 +62,10 @@ export class Prism extends Monster {
     // Retro: hidden between attacks until Ultraviolet finds it
     private revealedUntil = 0;
     private nextExposeAt = 0;
+    /** Untouchable until then, just after a switch */
+    private shieldedUntil = 0;
+    /** True while the shield's white pulse is drawn over its usual tint */
+    private shieldTinted = false;
     /** Set while damage that ignores the ray table is going through takeDamage */
     private direct = false;
 
@@ -105,6 +113,11 @@ export class Prism extends Monster {
         return this.action === 'approach' || this.action === 'windup' || this.action === 'dash';
     }
 
+    /** True for a moment after each switch: nothing hurts it, not even an exposure or a shard */
+    get shielded() {
+        return this.scene.time.now < this.shieldedUntil;
+    }
+
     private get tempo() {
         return PRISM.era[this.era];
     }
@@ -134,7 +147,7 @@ export class Prism extends Monster {
 
     /** Retro only: Ultraviolet shows it, stops it for a moment and lets the other rays bite */
     exposeToUv(): boolean {
-        if (!this.active || this.era !== 'retro' || this.action === 'intro' || this.action === 'swap') {
+        if (!this.active || this.era !== 'retro' || this.action === 'intro' || this.action === 'swap' || this.shielded) {
             return false;
         }
         const now = this.scene.time.now;
@@ -157,7 +170,7 @@ export class Prism extends Monster {
 
     /** A shard pushed back by White came home. This is how White alone can hurt it. */
     hitByDeflected(_damage: number): boolean {
-        if (!this.active || this.action === 'intro') {
+        if (!this.active || this.action === 'intro' || this.shielded) {
             return false;
         }
         this.strike(PRISM.shards.returnDamage);
@@ -205,6 +218,9 @@ export class Prism extends Monster {
     }
 
     protected multiplierFor(type: RayId): number {
+        if (this.shielded) {
+            return 0;
+        }
         if (this.direct) {
             return 1;
         }
@@ -332,6 +348,7 @@ export class Prism extends Monster {
         this.revealedUntil = 0;
         this.action = 'swap';
         this.actionUntil = now + PRISM.swapPause;
+        this.shieldedUntil = now + PRISM.swapShield;
         this.playMove();
         puff(this.scene, this.x, this.y, ERA_COLOR[era], 12, 26);
 
@@ -398,7 +415,11 @@ export class Prism extends Monster {
 
     private updateLook(now: number) {
         const { stealth } = PRISM;
-        if (this.action === 'intro' || this.action === 'swap') {
+        this.updateShieldPulse(now);
+        if (this.shielded) {
+            // The white pulse alone says it cannot be hurt; a blink on top of it is too much
+            this.setAlpha(1);
+        } else if (this.action === 'intro' || this.action === 'swap') {
             this.setAlpha(Math.floor(now / 90) % 2 === 0 ? 1 : 0.55);
         } else if (this.era !== 'retro' || this.action === 'telegraph') {
             this.setAlpha(1);
@@ -418,6 +439,17 @@ export class Prism extends Monster {
         if (this.action === 'telegraph' && this.comingEra) {
             this.drawBadge(this.comingEra, (this.actionUntil - now) / PRISM.telegraph);
         }
+    }
+
+    /** While shielded it pulses white, so a shot that does nothing is plainly not the player's fault */
+    private updateShieldPulse(now: number) {
+        const pulse = this.shielded && Math.floor(now / SHIELD_PULSE_MS) % 2 === 0;
+        if (pulse && !this.shieldTinted) {
+            this.setTint(SHIELD_WASH).setTintMode(Phaser.TintModes.SCREEN);
+        } else if (!pulse && this.shieldTinted) {
+            this.applyTint();
+        }
+        this.shieldTinted = pulse;
     }
 
     /**
