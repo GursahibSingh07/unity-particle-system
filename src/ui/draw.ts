@@ -117,9 +117,32 @@ export function dashedRect(g: Graphics, x: number, y: number, width: number, hei
     }
 }
 
+/** A caption plate that holds on any background: a paper keyline, an ink edge, then the fill */
+export function plate(g: Graphics, x: number, y: number, width: number, height: number, fill: number, keyline = PAPER) {
+    g.fillStyle(keyline, 1).fillRect(x - 2, y - 2, width + 4, height + 4);
+    g.fillStyle(INK, 1).fillRect(x, y, width, height);
+    g.fillStyle(fill, 1).fillRect(x + 3, y + 3, width - 6, height - 6);
+}
+
+/**
+ * One key cap centred on a point, drawn into `g`. Returns its lettering (to go in the same
+ * container as `g`, above it) and the cap's size.
+ */
+export function keyCap(scene: Phaser.Scene, g: Graphics, label: string, cx: number, cy: number, size = 15, fill = PAPER) {
+    const text = makeText(scene, cx, cy, label, size, { bold: true, color: INK }).setOrigin(0.5);
+    const height = size + 11;
+    const width = Math.max(height, Math.ceil(text.width) + 12);
+    const left = Math.round(cx - width / 2);
+    const top = Math.round(cy - height / 2);
+    g.fillStyle(INK, 1).fillRect(left, top + 3, width, height);
+    g.fillStyle(INK, 1).fillRect(left, top, width, height);
+    g.fillStyle(fill, 1).fillRect(left + 2, top + 2, width - 4, height - 4);
+    return { text, width, height };
+}
+
 /**
  * The controls as a row of key caps, centred on `cx`. Returns the objects so the caller can
- * put them in its own container.
+ * put them in its own container. The lettering steps down a size until the row fits `maxWidth`.
  */
 export function controlsRow(
     scene: Phaser.Scene,
@@ -128,11 +151,12 @@ export function controlsRow(
     size: number,
     textColor = INK,
     capFill = PAPER,
+    maxWidth = 1160,
 ): Phaser.GameObjects.GameObject[] {
+    // Made first, so the caps lie under their lettering wherever the row is not in a container
     const g = scene.add.graphics();
-    const objects: Phaser.GameObjects.GameObject[] = [g];
     const capHeight = size + 12;
-    const gap = Math.round(size * 1.6);
+    const gap = Math.round(size * 1.4);
 
     // Lay everything out from zero first, then shift it so the row is centred
     const placed: { text: Phaser.GameObjects.Text; x: number; cap: number; digit?: string }[] = [];
@@ -148,8 +172,16 @@ export function controlsRow(
         placed.push({ text: action, x: x + 4, cap: 0 });
         x += 4 + Math.ceil(action.width) + gap;
     }
+    if (x - gap > maxWidth && size > 11) {
+        for (const item of placed) {
+            item.text.destroy();
+        }
+        g.destroy();
+        return controlsRow(scene, cx, y + 1, size - 1, textColor, capFill, maxWidth);
+    }
     const left = Math.round(cx - (x - gap) / 2);
 
+    const objects: Phaser.GameObjects.GameObject[] = [g];
     for (const item of placed) {
         if (item.cap > 0) {
             g.fillStyle(INK, 1).fillRect(left + item.x, y + 3, item.cap, capHeight);
@@ -182,6 +214,7 @@ const DIGITS: Record<string, string[]> = {
     '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
     '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
     '/': ['00001', '00001', '00010', '00100', '01000', '10000', '10000'],
+    ':': ['00000', '00100', '00100', '00000', '00100', '00100', '00000'],
 };
 const GLYPH_WIDTH = 5;
 const GLYPH_HEIGHT = 7;

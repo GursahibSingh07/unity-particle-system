@@ -64,13 +64,20 @@ export function renderLoop(id: LoopId, seconds = 2): Promise<AudioBuffer> {
 }
 
 /** Worst case for the limiter: a track with effects fired over the top of it, eight a second */
-export function renderBusy(id: MusicId, effects: SfxId[], seconds = 6): Promise<AudioBuffer> {
+export function renderBusy(
+    id: MusicId,
+    effects: SfxId[],
+    seconds = 6,
+    loops: LoopId[] = ['infrared'],
+): Promise<AudioBuffer> {
     const song = getCompiled(id);
     const spacing = 0.125;
     return render(seconds, (mixer, from, to) => {
         scheduleRange(mixer.ctx, mixer.musicIn, song, 1, from, to);
         if (from === 0) {
-            LOOPS.infrared(mixer.ctx, mixer.sfx, 0.2);
+            for (const loop of loops) {
+                LOOPS[loop](mixer.ctx, mixer.sfx, 0.2);
+            }
         }
         for (let i = Math.ceil(from / spacing); i * spacing < to; i++) {
             if (i >= 4) {

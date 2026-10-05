@@ -1,17 +1,18 @@
 import type Phaser from 'phaser';
-import type { MonsterId, RadiationId } from './types';
+import type { MonsterId, RayId, UpgradeId } from './types';
 
 // The player's progress for the current playthrough, kept in the game registry so every
 // scene sees the same thing. Nothing is saved between page loads.
 
 type Registry = Phaser.Data.DataManager;
 
-const RADIATIONS = 'progress.radiations';
+const RAYS = 'progress.radiations';
 const CLEARED = 'progress.clearedRooms';
 const GUIDE = 'progress.guide';
 const BONUS_HEALTH = 'progress.bonusHealth';
 const SECRETS = 'progress.secrets';
 const ENDED = 'progress.ended';
+const UPGRADES = 'progress.upgrades';
 
 /** Health added by each secret, in health points (one HUD block is 5) */
 export const SECRET_HEALTH_BONUS = 10;
@@ -34,14 +35,20 @@ function addTo<T>(registry: Registry, key: string, value: T) {
 export const Progress = {
     /** Forget everything: call when a new game starts from the title screen */
     reset(registry: Registry) {
-        for (const key of [RADIATIONS, CLEARED, GUIDE, BONUS_HEALTH, SECRETS, ENDED]) {
+        for (const key of [RAYS, CLEARED, GUIDE, BONUS_HEALTH, SECRETS, ENDED, UPGRADES]) {
             registry.remove(key);
         }
     },
 
-    radiations: (registry: Registry) => list<RadiationId>(registry, RADIATIONS),
+    radiations: (registry: Registry) => list<RayId>(registry, RAYS),
     /** Returns true if it was newly unlocked */
-    unlockRadiation: (registry: Registry, id: RadiationId) => addTo(registry, RADIATIONS, id),
+    unlockRadiation: (registry: Registry, id: RayId) => addTo(registry, RAYS, id),
+
+    /** Everything the eras have handed over so far (LevelDef.grants), in the order it was given */
+    upgrades: (registry: Registry) => list<UpgradeId>(registry, UPGRADES),
+    hasUpgrade: (registry: Registry, id: UpgradeId) => list<UpgradeId>(registry, UPGRADES).includes(id),
+    /** Returns true if it was not already owned */
+    grantUpgrade: (registry: Registry, id: UpgradeId) => addTo(registry, UPGRADES, id),
 
     clearedRooms: (registry: Registry) => list<string>(registry, CLEARED),
     isRoomCleared: (registry: Registry, level: number, room: number) =>

@@ -129,15 +129,15 @@ export class Gallery extends Phaser.Scene {
         moving('player', 'walk-left', 3, 5);
         machine(3, 5, 180);
 
-        moving('swarmlet', 'move', 1, 1);
-        still('swarmlet', 1, 1.5, 1.4);
+        moving('rat', 'move', 1, 1);
+        still('rat', 1, 1.5, 1.4);
         still('projectile', 0, 2, 2);
-        moving('frostling', 'move', 1, 2);
-        moving('shade', 'move', 0, 3);
+        moving('slime', 'move', 1, 2);
+        moving('ghost', 'move', 0, 3);
         moving('ironclad', 'move', 1, 3);
         still('ironclad', 2, 2, 3);
         still('ironclad', 1, 3, 3);
-        still('shade', 1, 0, 4.5);
+        still('ghost', 1, 0, 4.5);
         moving('prism', 'move', 1.5, 4.5);
     }
 }

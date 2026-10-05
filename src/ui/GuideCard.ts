@@ -5,10 +5,7 @@ import { dashedRect, halftoneFade, panel } from './draw';
 import { LABELS } from './labels';
 import { INK, PAPER, PAPER_SHADE, PENCIL, RED, STYLE_THEME, makeText } from './theme';
 
-const PICTURE_HEIGHT = 106;
 const MARGIN = 12;
-const SPRITE_TARGET = 80;
-const TRUTH_HEIGHT = 144;
 
 export interface GuideCardOptions {
     width: number;
@@ -18,12 +15,47 @@ export interface GuideCardOptions {
     unlocked: boolean;
     /** Leave room at the bottom of the page for what it really was */
     truthSlot: boolean;
+    /** Height of the picture at the top of the page (default 106) */
+    pictureHeight?: number;
+    /** Lettering sizes: the title, and the note's sizes to step down through */
+    titleSize?: number;
+    noteSizes?: number[];
+    /** Height of the truth stamp (default 144) */
+    truthHeight?: number;
+    /** Small pages have no room for both: the truth is stamped over the note */
+    truthOverNote?: boolean;
+}
+
+// The order they are met in, era by era (docs/DESIGN.md section 6)
+const MET_ORDER: MonsterId[] = ['rat', 'slime', 'bat', 'ironclad', 'golem', 'zigbat', 'skitter', 'ghost', 'wraith', 'snowman', 'acidSlime', 'prism'];
+
+/** Every Field Guide page there are words for */
+export const GUIDE_ORDER: MonsterId[] = [
+    ...MET_ORDER.filter((id) => GUIDE[id]),
+    ...(Object.keys(GUIDE) as MonsterId[]).filter((id) => !MET_ORDER.includes(id)),
+];
+
+/** The enemy sheets come in five frame sizes: the largest whole scale that fits a box */
+export function guideSprite(scene: Phaser.Scene, id: MonsterId, style: ArtStyle, box: number, maxScale = 6) {
+    let key = `${id}-${style}`;
+    if (!scene.textures.exists(key)) {
+        key = `${id}-goldenAge`;
+    }
+    if (!scene.textures.exists(key)) {
+        return undefined;
+    }
+    const frame = scene.textures.getFrame(key, 0);
+    const scale = Phaser.Math.Clamp(Math.floor(box / Math.max(frame.width, frame.height)), 1, maxScale);
+    return scene.add.image(0, 0, key, 0).setScale(scale);
 }
 
 /** One Field Guide page: the monster, the Handler's note, and (after the ending) the truth */
 export class GuideCard {
     readonly container: Phaser.GameObjects.Container;
     private readonly picture: Phaser.GameObjects.Graphics;
+    private readonly pictureHeight: number;
+    private readonly noteY: number;
+    private note: Phaser.GameObjects.Text;
     private sprite?: Phaser.GameObjects.Image;
     private revealed = false;
 
@@ -37,6 +69,9 @@ export class GuideCard {
         const { width, height, unlocked } = options;
         const entry = GUIDE[id];
         const inner = width - MARGIN * 2;
+        this.pictureHeight = options.pictureHeight ?? 106;
+        const titleSize = options.titleSize ?? 26;
+        const truthHeight = options.truthHeight ?? 144;
 
         const g = scene.add.graphics();
         panel(g, 0, 0, width, height, PAPER, 4, 6);
@@ -53,32 +88,35 @@ export class GuideCard {
             parts.push(this.sprite);
         }
 
-        const titleY = MARGIN + PICTURE_HEIGHT + 10;
-        const title = makeText(scene, MARGIN, titleY, unlocked ? entry.title : LABELS.locked, 26, {
+        const titleY = MARGIN + this.pictureHeight + Math.round(titleSize * 0.35);
+        const title = makeText(scene, MARGIN, titleY, unlocked ? (entry?.title ?? id) : LABELS.locked, titleSize, {
             bold: true,
             color: unlocked ? INK : PENCIL,
         });
         if (title.width > inner) {
             title.setScale(inner / title.width);
         }
-        g.fillStyle(unlocked ? RED : PENCIL, 1).fillRect(MARGIN, titleY + 34, inner, 3);
+        const ruleY = titleY + Math.round(titleSize * 1.3);
+        g.fillStyle(unlocked ? RED : PENCIL, 1).fillRect(MARGIN, ruleY, inner, 3);
         parts.push(title);
 
-        const noteY = titleY + 46;
-        const room = height - noteY - MARGIN - (options.truthSlot ? TRUTH_HEIGHT + 8 : 0);
-        const noteText = unlocked ? entry.note : LABELS.lockedNote;
+        this.noteY = ruleY + Math.round(titleSize * 0.4) + 2;
+        const stacked = options.truthSlot && !options.truthOverNote;
+        const room = height - this.noteY - MARGIN - (stacked ? truthHeight + 8 : 0);
+        const noteText = unlocked ? (entry?.note ?? '') : LABELS.lockedNote;
         // Long notes step down a size rather than spill off the page
-        // (and start smaller on a page that also has to hold the truth, so the pages match)
-        const sizes = options.truthSlot ? [17, 15, 13] : [19, 17, 15, 13];
-        let note = makeText(scene, MARGIN, noteY, noteText, sizes[0], { wrap: inner, color: unlocked ? INK : PENCIL, lineSpacing: 2 });
+        const sizes = options.noteSizes ?? (options.truthSlot ? [17, 15, 13] : [19, 17, 15, 13]);
+        const make = (size: number) =>
+            makeText(scene, MARGIN, this.noteY, noteText, size, { wrap: inner, color: unlocked ? INK : PENCIL, lineSpacing: 2 });
+        this.note = make(sizes[0]);
         for (const size of sizes.slice(1)) {
-            if (note.height <= room) {
+            if (this.note.height <= room) {
                 break;
             }
-            note.destroy();
-            note = makeText(scene, MARGIN, noteY, noteText, size, { wrap: inner, color: unlocked ? INK : PENCIL, lineSpacing: 1 });
+            this.note.destroy();
+            this.note = make(size);
         }
-        parts.push(note);
+        parts.push(this.note);
 
         this.container = scene.add.container(x, y, parts);
     }
@@ -100,26 +138,37 @@ export class GuideCard {
             this.container.add(this.sprite);
         }
 
-        const top = height - MARGIN - TRUTH_HEIGHT;
+        const over = !!this.options.truthOverNote;
+        const stampHeight = over ? height - MARGIN - this.noteY : (this.options.truthHeight ?? 144);
+        const top = height - MARGIN - stampHeight;
+        if (over) {
+            // The officer's correction goes where the Handler's note was
+            this.note.setVisible(false);
+        }
+        const labelSize = over ? 13 : 15;
+        const band = labelSize + 6;
         const g = this.scene.add.graphics();
-        g.fillStyle(RED, 1).fillRect(0, 0, inner, TRUTH_HEIGHT);
-        g.fillStyle(0xfffaf0, 1).fillRect(3, 3, inner - 6, TRUTH_HEIGHT - 6);
-        g.fillStyle(RED, 1).fillRect(3, 3, inner - 6, 20);
-        const label = makeText(this.scene, 9, 4, LABELS.truthLabel, 15, { bold: true, color: 0xfffaf0 });
-        let truth = makeText(this.scene, 9, 28, entry.truth, 16, { bold: true, color: RED, wrap: inner - 18 });
-        for (const size of [14, 13, 12]) {
-            if (truth.height <= TRUTH_HEIGHT - 32) {
+        g.fillStyle(RED, 1).fillRect(0, 0, inner, stampHeight);
+        g.fillStyle(0xfffaf0, 1).fillRect(3, 3, inner - 6, stampHeight - 6);
+        g.fillStyle(RED, 1).fillRect(3, 3, inner - 6, band);
+        const label = makeText(this.scene, 8, 4, LABELS.truthLabel, labelSize, { bold: true, color: 0xfffaf0 });
+        const sizes = over ? [15, 14, 13, 12, 11] : [20, 18, 16, 14, 13, 12];
+        const truthText = entry?.truth ?? '';
+        const make = (size: number) => makeText(this.scene, 8, band + 7, truthText, size, { bold: true, color: RED, wrap: inner - 16 });
+        let truth = make(sizes[0]);
+        for (const size of sizes.slice(1)) {
+            if (truth.height <= stampHeight - band - 12) {
                 break;
             }
             truth.destroy();
-            truth = makeText(this.scene, 9, 28, entry.truth, size, { bold: true, color: RED, wrap: inner - 18 });
+            truth = make(size);
         }
         const stamp = this.scene.add.container(MARGIN, top, [g, label, truth]);
         this.container.add(stamp);
 
         if (animate) {
             // Slammed down like a rubber stamp
-            stamp.setPosition(MARGIN - inner * 0.2, top - TRUTH_HEIGHT * 0.2).setScale(1.4).setAlpha(0);
+            stamp.setPosition(MARGIN - inner * 0.2, top - stampHeight * 0.2).setScale(1.4).setAlpha(0);
             this.scene.tweens.add({ targets: stamp, x: MARGIN, y: top, scale: 1, alpha: 1, duration: 110, ease: 'Quad.easeIn' });
             if (this.sprite) {
                 const scale = this.sprite.scale;
@@ -132,30 +181,21 @@ export class GuideCard {
     private drawPicture(style: ArtStyle | undefined) {
         const g = this.picture;
         const width = this.options.width - MARGIN * 2;
+        const height = this.pictureHeight;
         g.clear();
         if (!style) {
-            g.fillStyle(PAPER_SHADE, 1).fillRect(MARGIN, MARGIN, width, PICTURE_HEIGHT);
-            dashedRect(g, MARGIN, MARGIN, width, PICTURE_HEIGHT, PENCIL, 8, 3);
+            g.fillStyle(PAPER_SHADE, 1).fillRect(MARGIN, MARGIN, width, height);
+            dashedRect(g, MARGIN, MARGIN, width, height, PENCIL, 8, 3);
             return;
         }
         const theme = STYLE_THEME[style];
-        g.fillStyle(INK, 1).fillRect(MARGIN, MARGIN, width, PICTURE_HEIGHT);
-        g.fillStyle(theme.floor, 1).fillRect(MARGIN + 3, MARGIN + 3, width - 6, PICTURE_HEIGHT - 6);
-        halftoneFade(g, MARGIN + 10, MARGIN + 62, width - 30, PICTURE_HEIGHT - 74, theme.wall, 10, 3.5, 'down', 0.55);
+        g.fillStyle(INK, 1).fillRect(MARGIN, MARGIN, width, height);
+        g.fillStyle(theme.floor, 1).fillRect(MARGIN + 3, MARGIN + 3, width - 6, height - 6);
+        halftoneFade(g, MARGIN + 10, MARGIN + Math.round(height * 0.58), width - 30, Math.round(height * 0.3), theme.wall, 10, 3.5, 'down', 0.55);
     }
 
     private makeSprite(style: ArtStyle) {
-        let key = `${this.id}-${style}`;
-        if (!this.scene.textures.exists(key)) {
-            key = `${this.id}-goldenAge`;
-        }
-        if (!this.scene.textures.exists(key)) {
-            return undefined;
-        }
-        const frame = this.scene.textures.getFrame(key, 0);
-        const scale = Math.max(1, Math.floor(SPRITE_TARGET / Math.max(frame.width, frame.height)));
-        return this.scene.add.image(this.options.width / 2, MARGIN + PICTURE_HEIGHT / 2, key, 0).setScale(scale);
+        const box = Math.min(this.pictureHeight - 14, this.options.width - MARGIN * 2 - 14);
+        return guideSprite(this.scene, this.id, style, box)?.setPosition(this.options.width / 2, MARGIN + this.pictureHeight / 2);
     }
 }
-
-export const GUIDE_ORDER = Object.keys(GUIDE) as MonsterId[];

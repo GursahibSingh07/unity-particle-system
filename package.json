@@ -11,6 +11,8 @@
     "typecheck": "tsc && tsc -p tests/tsconfig.json",
     "test": "vitest run",
     "smoke": "node tools/smoke.mjs",
+    "smoke:long": "node tools/smoke.mjs --long",
+    "smoke:build": "node tools/smoke.mjs --preview",
     "check": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {

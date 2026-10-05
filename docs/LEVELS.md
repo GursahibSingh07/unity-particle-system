@@ -1,266 +1,166 @@
-# Light Handler: Levels
+> Note (Director, 5 October 2026): the three timed eras were shortened from 135 to 120 seconds after this was written, to stay inside the 10-15 minute rule. The spawn tables' `from` times were tuned for 135 and were not rescaled, so late arrivals get less time on screen. A death in Golden restarts the wave the player fell in, not the era.
 
-The playable content, room by room. The data lives in `src/config/levels/` and every word the player reads lives in `src/config/text.ts`. The layout legend is in `docs/DESIGN.md` section 7.
+# Light Handler: Eras (v2)
 
-## How to read the timings
+The playable content, era by era. The data lives in `src/config/levels/` (one file per era; `index.ts` exports `LEVELS` in play order) and every word the player reads lives in `src/config/text.ts`. The design is the team's `docs/ideas.md`; the contract is `docs/DESIGN.md`.
 
-Each room has two numbers.
+Every era is the same city square, `SQUARE_LAYOUT` in `src/config/square.ts`. An era only adds its secret: `squareWithCrack(col, row)` in `src/config/levels/crack.ts` turns one wall tile into `S`.
 
-- **Bot (measured).** A scripted player in headless Edge, driving the real game with real key and mouse input. It always picks the right radiation, aims perfectly at monsters it should not be able to see, and walks straight at each spawn. It does not dodge projectiles, use cover or path around walls. So it is faster than a person in open rooms and takes more damage than a person in walled rooms. Times are from the room loading to the last monster dying, with the level intro skipped, over three runs of the final wave lists unless noted.
-- **First play (estimate).** The bot time scaled for a person who waits for monsters to arrive, misses, and is working out the new tool: about 2x in level 1, about 1.6x in levels 2 and 3, about 1.5x for the boss. These factors are a judgement, not a measurement. Nobody has played these rooms by hand yet.
+```
+####################      # building wall      e street entry
+####################      . , paving           P player start
+#........ee........#      o lamp post          F fountain
+#..o............o..#
+#e.....,....,.....e#      Four streets: north (two tiles), west and east
+#e.......FF.......e#      (two tiles each), south (one tile, beside the start).
+#......,.FF.,......#
+#..o............o..#
+#........eP........#
+####################
+```
 
-Fixed costs used in the estimates: a level's title card and three intro captions (about 8 s), walking to the chest and reading the item card (about 10 s), each room change (about 3 s), and for every wave a 1.0 s delay plus a 0.6 s spawn telegraph before anything can be hit.
+## How to read the numbers
 
-Numbers the estimates lean on (from `src/config/monsters.ts` and `src/config/radiation.ts`):
+- **Measured (bot).** A scripted player in headless Edge driving the real game with real keys and mouse. It aims perfectly at the nearest enemy, picks the ray for its class, backs away when crowded and dashes when touched. It does not dodge thrown things, step off ice or acid, or look for hearts. So it kills faster than a person and is hurt more than a careful one. Each figure is from one to three runs: treat them as a sanity check, not a statistic.
+- **Simulated.** The spawn tables run 400 times through the real `pickEntry` and `spawnInterval` (`src/systems/eraClock.ts`), ignoring `maxAlive`. These are exact for the data but say nothing about the player.
+- **Estimate.** A judgement about a first-time player. Nobody has played these eras by hand yet.
+
+Numbers the estimates lean on (`src/config/rays.ts`, `src/config/monsters.ts`): the player has 100 health and walks at 70. Energy is 100 and comes back at 26 a second.
 
 | Kill | Cost |
 | --- | --- |
-| Swarmlet with Radio | One pulse (12 damage against 10 health) kills everything within 44 units |
-| Frostling with Radio | 7 pulses and 140 energy, so the bar runs dry once: 8 to 10 s |
-| Frostling with Infrared | 0.5 s of beam (80 per second against 40 health) |
-| Shade with Ultraviolet | 3 flashes, 1.6 s from first to last, inside the 2.2 s stun |
-| Ironclad with Gamma | 2 charged shots (64 each against 120 health), 0.75 s charge each, 90 energy |
-| The Prism | 1390 health over four phases; about 20 s a phase for the bot |
+| Rat (10) or bat (8) with Blue | One flash (12) kills every one in the cone |
+| Slime (26) with Blue | Three flashes, 0.9 s |
+| Ironclad (130) | Blue: 11 flashes, 3.3 s and 88 energy. Red (1.5x): about 2 s at its usual distance, 1 s point blank |
+| Golem (260) | Red (1.5x) point blank: 2.1 s. Blue: 22 flashes and two energy bars |
+| Rat pack or zig-zag bats (14) with Green | One blob (26, or 52 against speed) kills everything in the burst |
+| Skitter (36) with Green | One blob (52) |
+| Ghost (60), wraith (44) | UV halves it and holds it still; then any ray. In overdrive one or two Blue flashes finish it |
+| Snowman (55), acid slime (70) with White | Four rings (18 each), 2.4 s if he stays within 46 units of it |
 
 ## Pacing
 
-| Part | Bot, combat only (measured) | First play (estimate) | Budget |
+| Part | Measured (bot) | First play (estimate) | Budget (DESIGN.md) |
 | --- | --- | --- | --- |
-| Cover and intro | - | 0.5 min | 0.5 min |
-| Level 1, Golden Age | 18 + 18 + 28 = 64 s | 128 s combat + 22 s fixed = 2.5 min | 2.5 min |
-| Level 2, Noir | 21 + 29 + 45 = 95 s | 152 s combat + 28 s fixed = 3.0 min | 3 min |
-| Level 3, Manga | 28 + 27 + 38 = 93 s | 149 s combat + 28 s fixed = 3.0 min | 3 min |
-| Boss, The Final Page | 81 s | 122 s combat + 10 s fixed + one retry = 2.7 min | 2.5 min |
-| Ending | - | 1.0 min | 1 min |
-| **Total** | **333 s** | **12.7 min** | **12.5 min** |
+| Cover and intro | - | 0.5 min | 0.5 |
+| 1. Golden Age | 38 to 46 s from load to cleared (two clean runs); 75 s with one death | 2.2 min: about 90 s of fighting, 35 s of captions, three item cards, wave gaps and the page turn | 2.5 |
+| 2. Neon Dusk | 138 s clean (120 s clock, 3 s before it starts); 168 s with the one death the bot had, in the surge | 2.5 min clean, 2.9 with one death | 2 |
+| 3. Late Edition | Before the last easing of the table: 4 deaths, not finished in 260 s. Not measured since | 2.5 min clean, 3.1 with one or two deaths | 2 |
+| 4. White Page | 144 s with one death at 0:49 | 2.5 min clean, 2.9 with one death | 2 |
+| 5. The Final Page | Not measured: the bot cannot fight the Prism through its era switches | 2 min, 2.5 with a retry | 2 |
+| Ending | - | 1 min | 1 |
+| **Total** | | **13.2 min with no deaths, about 15 with the deaths above** | **12.5** |
 
-If the scaling factors are wrong by a quarter either way, the total lands between about 10.5 and 15 minutes.
+The timed eras cannot be shorter than their clock: 120 s, plus about 15 s of title card, captions and item cards (the clock stands still under those), plus the walk-in. A death costs the time back to the last 45-second checkpoint: 22 s on average, 45 at worst. **So the total sits at the top of the 10 to 15 minute window.** If playtests run long, the cheapest fix is `duration: 120` in the three timed eras (checkpoints stay at 0:45 and 1:30, the surge is still the last 20 s): it saves 45 s and changes nothing else.
 
-## Level 1: Golden Age
+## 1. Golden Age (`goldenAge`)
 
-The player has Radio. Infrared comes from the chest in room 1. New monsters: Swarmlet, then Frostling.
+Given: Blue, Red, Green. Rule: the full wheel, no dash. Four waves; each begins when the last is dead.
 
-Intro: "The city sleeps. The Light Handler does not!" / "Monsters roam the square in broad daylight." / "Only one man can see them. So one man must act."
+Intro: "Noon in the city square. The sun on every window!" / "And monsters, in broad daylight. Only one man sees them." / "Turn the wheel, Light Handler. Find the colour that bites!"
 
-### 1.1 The Square
-
-```
-####################
-#..................#
-#.o......C.......o.#
-#..................#
-#.....,......,.....#
-#..................#
-#.....,......,.....#
-#.o......P.......o.#
-#..................#
-####################
-```
-
-- **Teaches:** moving and the Radio pulse, in an open room with nothing to get caught on. Flocks arrive small, then larger, then from two sides (ten Swarmlets spawn as a cluster of six and a cluster of four).
-- **Waves:** 4 Swarmlets / 6 Swarmlets / 10 Swarmlets / 1 Frostling.
-- **Why the Frostling:** it is alone, slow (30 against the player's 70) and cannot catch anyone, but Radio only chips it: the hit words drop from the big electric ones to plain "pow", and seven pulses empty the energy bar once. The player meets the energy bar and the idea of a wrong tool in complete safety, then the chest hands over the right one.
-- **Chest:** top centre, Infrared.
-- **Time:** bot 17 to 19 s (measured). First play about 40 s.
-
-### 1.2 The Counter
-
-```
-####################
-#..................#
-#..,............,..#
-#..................#
-#....oooooooooo....#
-#..................#
-#..................#
-#.........P........#
-#..................#
-####################
-```
-
-- **Teaches:** the Infrared beam, and that crates stop feet but not radiation. A Frostling on the far side has to walk the long way round while the player burns it over the top.
-- **Waves:** 1 Frostling / 3 Frostlings / 2 Frostlings + 6 Swarmlets / 4 Frostlings + 6 Swarmlets. The Swarmlets are there to make the player switch back to Radio.
-- **Time:** bot 17 to 19 s (measured). First play about 37 s.
-
-### 1.3 The Doorway
-
-```
-####################
-#HS....#...........#
-##,....#.....o.....#
-#......#...........#
-#..P...............#
-#..................#
-#......#...........#
-#......#.....o.....#
-#......#...........#
-####################
-```
-
-- **Teaches:** walls stop the beam, so position matters. Most spawns land in the big right-hand room and funnel through the two-tile door, where one beam burns the whole queue.
-- **Waves:** 3 Frostlings / 8 Swarmlets + 2 Frostlings / 3 Frostlings + 6 Swarmlets / 4 Frostlings + 10 Swarmlets.
-- **Secret (Infrared):** the cracked wall at column 2, row 1, in the top-left corner behind the player's back. It seals a one-tile alcove with the health upgrade at column 1, row 1. The heart is visible from the start; a patch of rough floor sits under the crack. It is close to the start on purpose (see the note under Secrets).
-- **Time:** bot 26 to 32 s (measured). First play about 55 s.
-
-## Level 2: Noir
-
-The player has Radio and Infrared. Ultraviolet comes from the chest in room 1. New monster: Shade.
-
-Intro: "Night falls. The colour drains out of the streets." / "Something moves here that the eye cannot follow." / "The Handler needs a light that tells the truth."
-
-### 2.1 Four Corners
-
-```
-####################
-#..................#
-#...###...C..###...#
-#...###......###...#
-#..................#
-#........P.........#
-#...###......###...#
-#...###......###...#
-#..................#
-####################
-```
-
-- **Teaches:** sight lines. Four blocks cut the beam, so the player has to find a clear street, and flocks come round corners. Only the two tools already owned are needed.
-- **Waves:** 8 Swarmlets + 2 Frostlings / 4 Frostlings / 12 Swarmlets + 3 Frostlings.
-- **Chest:** between the two top blocks, Ultraviolet.
-- **Time:** bot 20 to 23 s (measured). First play about 35 s.
-
-### 2.2 Lamplight
-
-```
-####################
-#..................#
-#.....o......o.....#
-#..................#
-#........,,........#
-#.........P........#
-#..................#
-#.....o......o.....#
-#..................#
-####################
-```
-
-- **Teaches:** the Shade, alone, in a room with no walls to block the flash or hide a dash. Then one with a small flock, then two, then two with a flock.
-- **Waves:** 1 Shade / 1 Shade + 4 Swarmlets / 2 Shades / 2 Shades + 6 Swarmlets.
-- **Time:** bot 28 to 29 s (measured). First play about 47 s.
-
-### 2.3 Round the Block
-
-```
-####################
-#..................#
-#..o............o..#
-#.......####.......#
-#.......#H##.......#
-#.......#S##.......#
-#........,.........#
-#..o......P.....o..#
-#..................#
-####################
-```
-
-- **Teaches:** a loop. A Shade needs a clear line to dash, so the building's corners are safety, and trouble comes both ways round. Frostlings resist Ultraviolet, so the player has to keep switching.
-- **Waves:** 1 Shade + 2 Frostlings / 2 Shades + 6 Swarmlets / 2 Shades + 1 Frostling / 2 Shades + 2 Frostlings + 4 Swarmlets.
-- **Secret (Ultraviolet):** the cracked wall on the building's south face at column 9, row 5, two tiles from the start. The health upgrade sits inside the building at column 9, row 4, in plain view.
-- **Time:** bot 37 to 50 s on the runs it cleared (measured); it cleared 3 of 7 runs, mostly dying pressed against the building with a Frostling on it, which is the bot's lack of pathing more than the room. First play about 72 s. This is the hardest room before the boss.
-
-## Level 3: Manga
-
-The player has Radio, Infrared and Ultraviolet. Gamma comes from the chest in room 1. New monster: Ironclad.
-
-Intro: "Faster now! Speed lines tear across the page!" / "They come in armour that shrugs off every ray." / "There must be a light that nothing can stop."
-
-### 3.1 Two Doors
-
-```
-####################
-#..................#
-#........C.........#
-#..................#
-#####..######..#####
-#..................#
-#...o..........o...#
-#.........P........#
-#..................#
-####################
-```
-
-- **Teaches:** nothing new; it is the exam on three tools. The wall splits the room, so the far half is out of beam and flash until the player commits to a door.
-- **Waves:** 6 Swarmlets + 1 Shade / 2 Frostlings + 2 Shades / 8 Swarmlets + 2 Frostlings + 1 Shade.
-- **Chest:** in the far half, Gamma.
-- **Time:** bot 25 to 31 s (measured, cleared 2 of 3). First play about 45 s.
-
-### 3.2 The Trenches
-
-```
-####################
-#................#H#
-#.................S#
-#...###......###..,#
-#..................#
-#.........P........#
-#...###......###...#
-#..................#
-#..................#
-####################
-```
-
-- **Teaches:** the Ironclad, alone. Low walls stop what it throws, and Gamma goes straight through them, so the lesson is to shoot from cover.
-- **Waves:** 1 Ironclad / 1 Ironclad + 6 Swarmlets / 2 Ironclads.
-- **Secret (Gamma):** the cracked wall at column 18, row 2, sealing the health upgrade in the top-right corner at column 18, row 1. Gamma reaches it from anywhere in the room, including through the trench walls.
-- **Time:** bot 27 to 28 s (measured; it took about 70 damage each run because it never dodges). First play about 43 s.
-
-### 3.3 Full Spread
-
-```
-####################
-#..................#
-#.....#......o.....#
-#....##............#
-#..................#
-#.........P........#
-#............##....#
-#.....o......#.....#
-#..................#
-####################
-```
-
-- **Teaches:** everything at once. Two L-shaped walls and two crates on a diagonal give cover from two Ironclads without making corridors.
-- **Waves:** 6 Swarmlets + 2 Frostlings + 1 Shade / 1 Ironclad + 1 Shade + 2 Frostlings / 2 Ironclads + 6 Swarmlets.
-- **Time:** bot 37 to 40 s (measured, cleared 2 of 3, again on projectile damage). First play about 61 s.
-
-## Boss: The Final Page
-
-Intro: "It arrives howling. It flashes red, then blue." / "Every colour at once. Every monster in one." / "This is the last page, Light Handler. Turn it."
-
-```
-####################
-#..................#
-#...o..........o...#
-#..................#
-#........,,........#
-#........,,........#
-#..................#
-#...o.....P....o...#
-#..................#
-####################
-```
-
-- **Layout:** The Prism cannot use tiles next to a solid, so the room is open. The four crates sit one tile nearer the top and bottom walls than in the sandbox, which leaves it the whole middle (columns 6 to 13) plus the two side lanes on rows 4 and 5. Crates stop its volleys and do not block any radiation.
-- **Wave:** 1 Prism.
-- **Time:** bot about 81 s on each of its two clears, about 20 s a phase (measured). It died in 5 of 7 attempts, nearly always in the Infrared phase at around 30 s, from repeated contact; it also died 4 times out of 4 in the sandbox boss room, so it is the fight and the bot rather than this layout. First play about 2.7 min with one retry.
-
-## Secrets
-
-| Level | Room | Radiation | Cracked wall (col, row) | Upgrade (col, row) |
+| Wave | Spawns | Teaches | Bot | First play (estimate) |
 | --- | --- | --- | --- | --- |
-| 1 | 3, The Doorway | Infrared | 2, 1 | 1, 1 |
-| 2 | 3, Round the Block | Ultraviolet | 9, 5 | 9, 4 |
-| 3 | 2, The Trenches | Gamma | 18, 2 | 18, 1 |
+| 1 | 10 rats (a cluster of six and one of four) | Moving, and that one Blue flash clears a pack | 5 s | 15 s |
+| 2 | 5 slimes, 8 bats | Bats fly straight over the fountain while slimes go round; a slime takes three flashes | 7 s | 20 s |
+| 3 | 2 Ironclads, 3 slimes | Armour: keeps its distance and throws after a wind-up. Blue makes small words, Red makes big ones | 13 to 16 s | 25 s |
+| 4 | 1 Golem, 1 Ironclad, 12 rats, 6 bats | Rays stop at the Golem, so the pack behind it is safe until he steps round it. Red up close for the Golem, Blue for the rest | 13 s | 30 s |
 
-Each one uses the radiation that level's chest gave, so the rule a player can learn is "this page's new light opens this page's wall". All three were checked in the running game: the wrong radiation does nothing, the right one breaks the wall, and walking in raises maximum health from 100 to 110.
+- **Intensity:** low, low, medium, high. The bot, which does not dodge, ended its clean runs on 28 and on 4 health and died once in wave 4: wave 4 is a real test, and a death restarts the era from wave 1. If first players die here often, drop the Ironclad from wave 4.
+- **Secret:** Blue. The crack is at column 4, row 1: the shop front left of the town hall, on the north wall's lower row. Blue is what he fires most here, so this is the one most likely to be found by accident, which teaches that cracks exist.
 
-A room without a chest ends the moment its last monster dies, so these have to be taken during the fight. That is why the first two are within two or three tiles of the player start, where they can be seen and broken in the quiet second and a half before the first wave appears, and why the third uses Gamma, which reaches from anywhere.
+## 2. Neon Dusk (`cyberpunk`)
+
+Given: the dash. Rule (`ERA_RULES.cyberpunk`): Blue is gone; Red and Green; one dash, 3 s cooldown. 120 s; checkpoints at 0:45 and 1:30; surge from 1:40.
+
+Intro: "Dusk. Neon. The Blue ray is gone from the wheel." / "Red and Green remain. The monsters are quicker."
+
+`spawnEvery: [3800, 2000]`, `maxAlive: 16`, `surge: 20` (the wait between arrivals is halved in the surge).
+
+| From | Monster | Group | Weight | Why |
+| --- | --- | --- | --- | --- |
+| 0:00 | zigbat | 2 | 5 | The speed class, alone for twelve seconds |
+| 0:12 | rat | 4 | 3 | The packs Blue used to clear: one Green blob does it now |
+| 0:25 | slime | 2 | 2 | A full-charge blob kills it exactly |
+| 0:50 | skitter | 1 | 4 | Just after the first checkpoint: it bolts when hit, so he must aim again |
+| 1:10 | ironclad | 1 | 1 | Rare: the one thing here Red is for |
+| 1:35 | zigbat | 4 | 3 | Just after the second checkpoint: bigger flocks |
+| 1:45 | skitter | 2 | 2 | Pairs |
+
+Earlier swarm and armour fall in proportion because every later line dilutes them: rats are 3 of 8 at 0:12 and 3 of 20 by 1:45.
+
+Simulated arrivals (enemies per 15 s): 9, 14, 10, 12, 11, 12, 12, 19, 36. Health arriving per second: 8, 11, 10, 12, 13, 17, 15, 25, 48. About 133 enemies in all: 60 zig-zag bats, 45 rats, 14 skitters, 13 slimes, 2 Ironclads.
+
+- **Intensity:** a calm first 45 s (zig-zag bats, then rats), a slow build through the skitter, a step up after 1:30, and a surge at about four times the opening rate. Each checkpoint is followed by a new line of the table rather than a rest (see Requests).
+- **Measured:** the bot never had more than 9 alive, so the cap of 16 only matters in the surge. Its health went 100, 89, 39, 17 across the three thirds and it died once, six seconds into the surge.
+- **Secret:** Green. Column 0, row 7: the bookshop's wall, low on the west side.
+
+## 3. Late Edition (`retro`)
+
+Given: double dash, UV lens. Rule (`ERA_RULES.retro`): overdrive (twice as fast, twice as hard, twice the drain); the wheel is locked and turns by itself every 5 s; F switches to UV; two dashes, 5 s cooldown. 120 s; checkpoints at 0:45 and 1:30; surge from 1:40.
+
+Intro: "Dark now. The machine runs hot. Too hot." / "The wheel turns by itself. Something hides."
+
+`spawnEvery: [3400, 1500]`, `maxAlive: 34`, `surge: 20`.
+
+| From | Monster | Group | Weight | Why |
+| --- | --- | --- | --- | --- |
+| 0:00 | rat | 6 | 5 | Fodder: the crowd. An overdriven flash clears a pack whatever the wheel shows |
+| 0:00 | bat | 5 | 3 | Fodder that ignores the fountain |
+| 0:10 | ghost | 1 | 2 | Stealth: nothing but UV touches it, and UV is the only thing he still chooses |
+| 0:25 | slime | 3 | 2 | Something that survives one flash |
+| 0:50 | wraith | 1 | 2 | Just after the first checkpoint: faster, dashes twice, does not wait to hide again |
+| 1:00 | zigbat | 3 | 2 | Speed, for when the wheel happens to show Green |
+| 1:20 | ironclad | 1 | 1 | Rare: one thing that wants a colour the wheel may not give |
+| 1:35 | rat | 8 | 3 | Just after the second checkpoint: the horde |
+
+Simulated arrivals (enemies per 15 s): 26, 23, 22, 21, 23, 26, 29, 47, 82. Health arriving per second: 18, 19, 19, 19, 22, 26, 28, 45, 78. About 300 enemies in all: 180 rats, 67 bats, 21 slimes, 16 zig-zag bats, 8 ghosts, 6 wraiths, 2 Ironclads. A ghost arrives about once every 17 s; the chance that none comes in the first 45 s is about one in eight.
+
+- **Intensity:** dense from the start but soft (everything in the first 25 s dies to one flash, bar the ghost), flat to 1:15, then the horde and a surge that will sit on the cap of 34.
+- **Measured:** with an earlier, harder table (`[3400, 1300]`, cap 40, ghost weight 3, hordes of 10) the bot died four times and did not finish in 260 s; its health fell fastest when stealth enemies were about, because it only looks at the nearest enemy. The table was eased to the numbers above and **has not been run since**. This is the era most likely to need another pass.
+- **Secret:** UV. Column 15, row 1: the shop front right of the town hall, on the north wall's lower row. "It shows what hides."
+
+## 4. White Page (`manga`)
+
+Given: Unprism (White). Rule (`ERA_RULES.manga`): White only; two dashes, 5 s cooldown. 120 s; checkpoints at 0:45 and 1:30; surge from 1:40.
+
+Intro: "No colour left." / "Only white light."
+
+`spawnEvery: [4600, 2600]`, `maxAlive: 14`, `surge: 20`.
+
+| From | Monster | Group | Weight | Why |
+| --- | --- | --- | --- | --- |
+| 0:00 | snowman | 1 | 4 | Alone at first: the ring sends the snowball back at it |
+| 0:05 | rat | 5 | 4 | Fodder: one ring kills a pack that gets close |
+| 0:22 | acidSlime | 1 | 2 | A marker, then a pool: not something to push back, something to step off |
+| 0:35 | bat | 4 | 3 | Fodder over the furniture |
+| 0:50 | slime | 2 | 2 | Just after the first checkpoint: takes two rings |
+| 1:20 | snowman | 2 | 2 | Pairs: ice from two sides |
+| 1:40 | acidSlime | 2 | 1 | Just after the second checkpoint: ice and acid together |
+
+There is no armour, speed or stealth enemy here at all: White does a quarter damage to them, so each would be a wall he cannot remove (an Ironclad would take 44 rings). Swarm is the fodder; throwers are the era.
+
+Simulated arrivals (enemies per 15 s): 10, 8, 11, 11, 11, 11, 13, 19, 29. About 125 enemies in all: 63 rats, 27 bats, 19 snowmen, 8 slimes, 8 acid slimes. A thrower arrives about every 5 s on average and takes about that long to walk to and kill, so they build up slowly; the cap of 14 is what bounds the air (fourteen throwers would be about six things thrown a second; the bot saw 8 to 14 alive, mostly fodder).
+
+- **Intensity:** one snowman to start, steady through the middle, pairs from 1:20, and a surge that fills the cap.
+- **Measured:** the bot (which stands in ice and acid) died once at 0:49 and finished the rest from 0:45 without dying, ending the surge on 29 health.
+- **Secret:** White. Column 19, row 7: the pharmacy's wall, low on the east side. The ring reaches it from anywhere within three tiles.
+
+## 5. The Final Page (`finalPage`)
+
+No grants, no secret. The plain square, one wave: one `prism` (1400 health). Rule: `ERA_RULES.finalPage` (everything, two dashes) until its first switch; then whatever era it has switched to.
+
+Intro: "It comes wailing up the street. Red, then blue." / "It changes the page. The machine changes with it." / "Watch the sign above its head."
+
+It dashes twice, then stands still for 3 s with the coming era over its head (free damage), then redraws the square: Golden, Cyberpunk (faster, brings speed enemies), Retro (fades out; UV first), Manga (shards for White to send back). The length is set by its health and by `PRISM` in `src/config/monsters.ts`, not by anything in the era file. Estimate 2 minutes; not measured.
+
+## Secrets at a glance
+
+| Era | Ray | Tile (col, row) | Wall |
+| --- | --- | --- | --- |
+| Golden Age | blue | 4, 1 | North, lower row: shop left of the town hall |
+| Neon Dusk | green | 0, 7 | West: the bookshop |
+| Late Edition | uv | 15, 1 | North, lower row: shop right of the town hall |
+| White Page | white | 19, 7 | East: the pharmacy |
+
+Two are on the north wall's lower row, where the crack reads best (a real wall face); two are on side walls for variety. None touches a street entry. Each drops a health upgrade (+2 blocks) onto the paving in front of it.

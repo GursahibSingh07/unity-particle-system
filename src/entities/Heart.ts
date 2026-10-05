@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { HEART } from '../config/monsters';
+import { ART_SCALE } from '../config/world';
 import { DEPTH } from './effects';
 
 const BLINK_MS = 2500;
@@ -25,8 +26,8 @@ export class Heart extends Phaser.GameObjects.Image {
         this.setDepth(DEPTH.pickup);
 
         // A small hop so a drop catches the eye
-        this.setScale(0.4);
-        scene.tweens.add({ targets: this, scale: 1, duration: 260, ease: 'Back.easeOut' });
+        this.setScale(ART_SCALE * 0.4);
+        scene.tweens.add({ targets: this, scale: ART_SCALE, duration: 260, ease: 'Back.easeOut' });
     }
 
     update() {

@@ -1,58 +1,80 @@
 import Phaser from 'phaser';
-import { LEVELS } from '../config/levels';
+import { ENDING_SCENE } from '../config/flow';
 import { MONSTERS } from '../config/monsters';
-import { TORCH } from '../config/radiation';
+import { TORCH } from '../config/rays';
+import { SQUARE_LAYOUT } from '../config/square';
 import { ENDING } from '../config/text';
-import { ROOM, TILE, WORLD_HEIGHT, WORLD_WIDTH, ZOOM } from '../config/world';
+import { ART_SCALE, ROOM, TILE, WORLD_HEIGHT, WORLD_WIDTH, ZOOM } from '../config/world';
 import { Bystander } from '../entities/Bystander';
 import { DEPTH } from '../entities/effects';
 import { MACHINE_LENGTH, Player } from '../entities/Player';
 import { Events } from '../events';
 import { Progress } from '../state';
+import { worldScale } from '../systems/artScale';
 import { showDialog, showScreen } from '../systems/conversation';
 import { Navigator, castRay, segmentClear, type Point } from '../systems/Navigation';
-import { parseRoom, type Rect, type TileKind } from '../systems/roomLayout';
+import { parseRoom, type Rect } from '../systems/roomLayout';
 import type { MonsterId } from '../types';
 
 /** The whole scene is drawn in the one style that is not a comic */
 const STYLE = 'plain';
-
-/** The world comes back out of the white the boss page ended on */
-const FADE_IN = 900;
-const FADE_OUT = 700;
-/** He keeps the torch for this long at most... */
-const PLAY_TIME = 12000;
-/** ...or until he has shone it at this many different people */
-const PEOPLE_TO_BOTHER = 3;
-/** Quiet beats between the steps of the sequence */
-const BEAT = 900;
-/** Guards against a caption or a card that is never answered; the player normally dismisses them */
-const DIALOG_TIMEOUT = 20000;
-const DIALOG_TIMEOUT_PER_LINE = 6000;
-const SCREEN_TIMEOUT = 90000;
+const CITY_DEPTH = 0.5;
+const CITY_OVER_DEPTH = 4.8;
 
 /** Rays drawn to shape the torch's cone around walls */
 const CONE_RAYS = 8;
-/** Pigeons take off when he walks this close */
-const SHOO_DISTANCE = 13;
-const PIGEONS = 5;
-/** The people who were never monsters, in the order they are stood around the room */
-const PEOPLE: MonsterId[] = ['frostling', 'shade', 'ironclad'];
+/** Frames of `prism-plain`: 0 and 1 swap the lights, 2 has the door open */
+const CAR_DOOR_OPEN = 2;
+/** The police car is parked in the mouth of the north street, in front of the town hall */
+const CAR = { x: 160, y: 70, width: 28, height: 14 };
 
-/** In daylight a secret wall is just a wall, and there was never a chest */
-const TILE_FRAMES: Record<TileKind, number> = {
-    floor: 0,
-    floorAlt: 1,
-    wall: 2,
-    prop: 3,
-    secret: 2,
-    chest: 0,
-};
+interface CastMember {
+    kind: MonsterId;
+    x: number;
+    y: number;
+    animal?: boolean;
+    /** Walks (rides) round these points instead of standing */
+    route?: Point[];
+}
 
 /**
- * The twist. The boss room again, in plain daylight: the monsters are passers-by, the Prism
- * is a police car and the EMW Machine is a pocket torch. The player gets a short moment with
- * the torch, then it is taken out of his hands and the UI scene tells the rest.
+ * Who is in the square on an ordinary afternoon: a handful, not everyone he ever fought.
+ * World units; anyone whose spot turns out not to be open paving is moved to the nearest that is.
+ */
+const CAST: CastMember[] = [
+    // A man in a dark coat, outside the shops
+    { kind: 'ghost', x: 96, y: 66 },
+    // The ice-cream vendor, by the lamp
+    { kind: 'snowman', x: 238, y: 86 },
+    // A jogger, getting his breath back
+    { kind: 'skitter', x: 228, y: 142 },
+    // A cyclist doing slow laps of the west side
+    {
+        kind: 'ironclad',
+        x: 36,
+        y: 94,
+        route: [
+            { x: 124, y: 94 },
+            { x: 124, y: 126 },
+            { x: 36, y: 126 },
+            { x: 36, y: 94 },
+        ],
+    },
+    // Two small dogs
+    { kind: 'slime', x: 88, y: 146, animal: true },
+    { kind: 'slime', x: 99, y: 151, animal: true },
+    // Pigeons, at the foot of the fountain
+    { kind: 'rat', x: 130, y: 141, animal: true },
+    { kind: 'rat', x: 138, y: 147, animal: true },
+    { kind: 'rat', x: 124, y: 149, animal: true },
+    { kind: 'rat', x: 141, y: 139, animal: true },
+];
+
+/**
+ * The twist. The same city square in plain daylight, with every detail back: the monsters are
+ * passers-by, the Prism is a police car and the EMW Machine is a pocket torch. The player gets
+ * a short moment with the torch, then it is taken out of his hands and the UI scene tells the
+ * rest. Nobody here is laughed at.
  */
 export class Ending extends Phaser.Scene {
     private player!: Player;
@@ -63,6 +85,8 @@ export class Ending extends Phaser.Scene {
     private cone!: Phaser.GameObjects.Graphics;
     private bothered = new Set<Bystander>();
     private controlTaken = false;
+    /** Dev only: ends whatever answer from the UI the scene is waiting for */
+    private skipWait: (() => void) | null = null;
 
     constructor() {
         super('Ending');
@@ -72,25 +96,21 @@ export class Ending extends Phaser.Scene {
         this.bystanders = [];
         this.bothered.clear();
         this.controlTaken = false;
+        this.skipWait = null;
 
         const events = this.game.events;
         events.emit(Events.ENDING_STARTED);
         events.emit(Events.BANNER, '');
 
         this.cameras.main.setZoom(ZOOM).centerOn(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
-        this.cameras.main.fadeIn(FADE_IN, 255, 255, 255);
+        this.cameras.main.fadeIn(ENDING_SCENE.fadeIn, 255, 255, 255);
         this.physics.world.setBounds(ROOM.x, ROOM.y, ROOM.width, ROOM.height);
 
-        // The same room the Prism was fought in
-        const room = parseRoom(LEVELS[LEVELS.length - 1].rooms.at(-1)!.layout);
+        // The square he has been defending all along
+        const room = parseRoom([...SQUARE_LAYOUT]);
         this.walls = room.walls;
+        this.drawSquare();
         const solids = this.physics.add.staticGroup();
-        for (const tile of room.tiles) {
-            if (tile.kind === 'prop') {
-                this.add.image(tile.x, tile.y, `tiles-${STYLE}`, TILE_FRAMES.floor).setOrigin(0, 0);
-            }
-            this.add.image(tile.x, tile.y, `tiles-${STYLE}`, TILE_FRAMES[tile.kind]).setOrigin(0, 0);
-        }
         for (const solid of room.solids) {
             solids.add(this.add.zone(solid.x + TILE / 2, solid.y + TILE / 2, TILE, TILE));
         }
@@ -105,20 +125,36 @@ export class Ending extends Phaser.Scene {
         this.physics.add.collider(this.player, solids);
         this.physics.add.collider(this.player, obstacles);
 
-        this.time.delayedCall(PLAY_TIME, () => this.takeControl());
+        this.time.delayedCall(ENDING_SCENE.playTime, () => this.takeControl());
+
+        if (import.meta.env.DEV) {
+            // K moves the ending on: it takes the torch away, then skips each caption and card
+            this.input.keyboard!.on('keydown-K', () => {
+                if (this.skipWait) {
+                    this.skipWait();
+                } else {
+                    this.takeControl();
+                }
+            });
+        }
     }
 
-    update() {
+    update(_time: number, delta: number) {
         this.player.update();
         this.cone.clear();
+
+        const { x, y } = this.player;
+        for (const bystander of this.bystanders) {
+            bystander.update(delta, x, y);
+        }
         if (this.controlTaken) {
             return;
         }
 
-        const { x, y } = this.player;
         const canStand = (px: number, py: number) => this.canStand(px, py);
         for (const bystander of this.bystanders) {
-            if (bystander.small && Math.hypot(bystander.x - x, bystander.y - y) < SHOO_DISTANCE) {
+            const near = Math.hypot(bystander.x - x, bystander.y - y) < ENDING_SCENE.shooDistance;
+            if (bystander.animal && near) {
                 bystander.bother(x, y, canStand);
             }
         }
@@ -128,7 +164,20 @@ export class Ending extends Phaser.Scene {
         }
     }
 
-    /** True if a bystander could stand at this point: on open floor, inside the room */
+    /** The square's picture in plain daylight, and the layer of it that people walk behind */
+    private drawSquare() {
+        if (!this.textures.exists(`city-${STYLE}`)) {
+            return;
+        }
+        this.add.image(ROOM.x, ROOM.y, `city-${STYLE}`).setOrigin(0, 0).setScale(ART_SCALE).setDepth(CITY_DEPTH);
+        this.add
+            .image(ROOM.x, ROOM.y, `city-${STYLE}-over`)
+            .setOrigin(0, 0)
+            .setScale(ART_SCALE)
+            .setDepth(CITY_OVER_DEPTH);
+    }
+
+    /** True if a bystander could stand at this point: on open paving, inside the square */
     private canStand(x: number, y: number) {
         const margin = TILE / 2;
         const insideX = x > ROOM.x + margin && x < ROOM.x + ROOM.width - margin;
@@ -136,73 +185,61 @@ export class Ending extends Phaser.Scene {
         return insideX && insideY && !this.nav.isSolid(x, y);
     }
 
-    /** Stand the police car, the people and the pigeons around the room, well apart */
-    private placeCast(start: Point, obstacles: Phaser.Physics.Arcade.StaticGroup) {
-        const taken: Point[] = [];
-        // The spot furthest from everything already placed (the player counts), within reach
-        const pick = (cells: Point[], minFromPlayer: number, maxFromPlayer: number) => {
-            let best: Point | null = null;
-            let bestScore = -1;
-            for (const cell of cells) {
-                const fromPlayer = Math.hypot(cell.x - start.x, cell.y - start.y);
-                if (fromPlayer < minFromPlayer || fromPlayer > maxFromPlayer) {
-                    continue;
-                }
-                let score = fromPlayer;
-                for (const other of taken) {
-                    score = Math.min(score, Math.hypot(cell.x - other.x, cell.y - other.y));
-                }
-                if (score > bestScore) {
-                    best = cell;
-                    bestScore = score;
-                }
+    /** The given spot if it is open paving, or else the nearest tile centre that is */
+    private openSpot(x: number, y: number): Point {
+        if (this.canStand(x, y)) {
+            return { x, y };
+        }
+        let best: Point = { x, y };
+        let bestDistance = Infinity;
+        for (const cell of this.nav.reachableCells(0)) {
+            const distance = Math.hypot(cell.x - x, cell.y - y);
+            if (distance < bestDistance) {
+                best = cell;
+                bestDistance = distance;
             }
-            return best;
-        };
+        }
+        return best;
+    }
 
-        // The car needs a clear tile all round it, and is parked up the far end
-        const open = this.nav.reachableCells(0);
-        const roomy = this.nav.reachableCells(MONSTERS.prism.radius);
-        const parking = pick(roomy, 70, Infinity) ?? pick(roomy, 0, Infinity) ?? pick(open, 0, Infinity) ?? start;
-        taken.push(parking);
-        this.car = this.add.sprite(parking.x, parking.y, `prism-${STYLE}`, 0).setDepth(DEPTH.monster);
+    /** Park the police car and put the people, the dogs and the pigeons about the square */
+    private placeCast(start: Point, obstacles: Phaser.Physics.Arcade.StaticGroup) {
+        this.car = worldScale(this.add.sprite(CAR.x, CAR.y, `prism-${STYLE}`, 0)).setDepth(DEPTH.monster);
         // Its two frames swap the lights: the flashing colours he was fighting
-        this.car.play(`prism-${STYLE}-move`);
-        const carBody = this.add.zone(parking.x, parking.y + 2, 28, 18);
-        obstacles.add(carBody);
+        if (this.anims.exists(`prism-${STYLE}-move`)) {
+            this.car.play(`prism-${STYLE}-move`);
+        }
+        obstacles.add(this.add.zone(CAR.x, CAR.y + 2, CAR.width, CAR.height));
 
-        for (const kind of PEOPLE) {
-            const spot = pick(open, 34, 86) ?? pick(open, 20, Infinity);
-            if (!spot) {
+        for (const member of CAST) {
+            if (!this.textures.exists(`${member.kind}-${STYLE}`)) {
                 continue;
             }
-            taken.push(spot);
-            const person = new Bystander(this, spot.x, spot.y, kind, MONSTERS[kind].radius);
-            obstacles.add(person);
-            this.bystanders.push(person);
-        }
-
-        const roost = pick(open, 30, 80) ?? pick(open, 20, Infinity);
-        if (roost) {
-            for (let i = 0; i < PIGEONS; i++) {
-                const angle = (i / PIGEONS) * Math.PI * 2;
-                const reach = i === 0 ? 0 : Phaser.Math.FloatBetween(6, 11);
-                let x = roost.x + Math.cos(angle) * reach;
-                let y = roost.y + Math.sin(angle) * reach;
-                if (!this.canStand(x, y)) {
-                    x = roost.x;
-                    y = roost.y;
-                }
-                const pigeon = new Bystander(this, x, y, 'swarmlet', MONSTERS.swarmlet.radius);
-                pigeon.setFlipX(i % 2 === 0);
-                this.bystanders.push(pigeon);
+            const radius = MONSTERS[member.kind].radius;
+            const spot = this.openSpot(member.x, member.y);
+            // People stand in his way; animals and anyone on the move do not
+            let obstacle: Phaser.GameObjects.Zone | undefined;
+            if (!member.animal && !member.route) {
+                obstacle = this.add.zone(spot.x, spot.y, radius * 2, radius * 2);
+                obstacles.add(obstacle);
             }
+            const bystander = new Bystander(this, spot.x, spot.y, member.kind, radius, {
+                animal: member.animal,
+                route: member.route,
+                obstacle,
+            });
+            // Pigeons and dogs do not all look the same way
+            if (member.animal) {
+                bystander.setFlipX(this.bystanders.length % 2 === 0);
+            }
+            this.bystanders.push(bystander);
         }
 
-        // Still shaken from a moment ago: a couple of them are already turning away
-        this.time.delayedCall(FADE_IN * 0.6, () => {
+        // Still shaken from a moment ago: the two people nearest him are already turning away
+        this.time.delayedCall(ENDING_SCENE.fadeIn * 0.6, () => {
             this.bystanders
-                .filter((bystander) => !bystander.small)
+                .filter((bystander) => !bystander.animal && !bystander.walks)
+                .sort((a, b) => Math.hypot(a.x - start.x, a.y - start.y) - Math.hypot(b.x - start.x, b.y - start.y))
                 .slice(0, 2)
                 .forEach((bystander) => bystander.bother(start.x, start.y, (x, y) => this.canStand(x, y)));
         });
@@ -237,15 +274,15 @@ export class Ending extends Phaser.Scene {
             if (off > halfAngle + cover || !segmentClear(x, y, bystander.x, bystander.y, this.walls)) {
                 continue;
             }
-            if (bystander.bother(x, y, canStand) && !bystander.small) {
+            if (bystander.bother(x, y, canStand) && !bystander.animal) {
                 this.bothered.add(bystander);
             }
         }
 
-        if (this.bothered.size >= PEOPLE_TO_BOTHER) {
+        if (this.bothered.size >= ENDING_SCENE.peopleToBother) {
             // Let the last flinch play out before the car door opens
             this.bothered.clear();
-            this.time.delayedCall(BEAT, () => this.takeControl());
+            this.time.delayedCall(ENDING_SCENE.beat, () => this.takeControl());
         }
     }
 
@@ -257,21 +294,24 @@ export class Ending extends Phaser.Scene {
         this.controlTaken = true;
         this.cone.clear();
         this.player.frozen = true;
-        // He turns to the flashing lights
+        // He turns to the flashing lights, and the car door opens
         this.player.aim(Phaser.Math.Angle.Between(this.player.x, this.player.handY, this.car.x, this.car.y));
+        if (this.car.texture.has(String(CAR_DOOR_OPEN))) {
+            this.car.anims.stop();
+            this.car.setFrame(CAR_DOOR_OPEN);
+        }
 
         const registry = this.registry;
-        this.after(BEAT, () =>
+        const { beat } = ENDING_SCENE;
+        this.after(beat, () =>
             this.say(ENDING.reveal, () =>
                 this.say(ENDING.arrest, () => {
                     this.lowerTorch();
-                    this.after(BEAT, () =>
-                        showScreen(this, 'report', SCREEN_TIMEOUT, () => {
+                    this.after(beat, () =>
+                        this.show('report', () => {
                             // From now on the Field Guide shows what each thing really was
                             Progress.markEnded(registry);
-                            showScreen(this, 'guideTruth', SCREEN_TIMEOUT, () =>
-                                showScreen(this, 'credits', SCREEN_TIMEOUT, () => this.backToTitle()),
-                            );
+                            this.show('guideTruth', () => this.show('credits', () => this.backToTitle()));
                         }),
                     );
                 }),
@@ -280,7 +320,25 @@ export class Ending extends Phaser.Scene {
     }
 
     private say(lines: string[], done: () => void) {
-        showDialog(this, lines, DIALOG_TIMEOUT + DIALOG_TIMEOUT_PER_LINE * lines.length, done);
+        const timeout = ENDING_SCENE.dialogTimeout + ENDING_SCENE.dialogTimeoutPerLine * lines.length;
+        this.wait(done, (finish) => showDialog(this, lines, timeout, finish));
+    }
+
+    private show(screen: string, done: () => void) {
+        this.wait(done, (finish) => showScreen(this, screen, ENDING_SCENE.screenTimeout, finish));
+    }
+
+    /** Ask the UI for something and carry on when it answers, times out, or (dev) K is pressed */
+    private wait(done: () => void, ask: (finish: () => void) => () => void) {
+        const finish = () => {
+            this.skipWait = null;
+            done();
+        };
+        const cancel = ask(finish);
+        this.skipWait = () => {
+            cancel();
+            finish();
+        };
     }
 
     private after(delay: number, action: () => void) {
@@ -303,6 +361,6 @@ export class Ending extends Phaser.Scene {
     private backToTitle() {
         const camera = this.cameras.main;
         camera.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Title'));
-        camera.fadeOut(FADE_OUT, 0, 0, 0);
+        camera.fadeOut(ENDING_SCENE.fadeOut, 0, 0, 0);
     }
 }

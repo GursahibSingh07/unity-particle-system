@@ -233,7 +233,7 @@ export class LevelIntroModal implements Modal {
 
         g.fillStyle(INK, 0.55).fillRect(0, top + 12, SCREEN_WIDTH, BAND_HEIGHT);
         // On the dark page the band is edged in white, or it would sink into the room
-        g.fillStyle(style === 'noir' ? 0xf5f5f7 : style === 'manga' ? 0x000000 : INK, 1).fillRect(0, top, SCREEN_WIDTH, BAND_HEIGHT);
+        g.fillStyle(style === 'retro' ? 0xf5f5f7 : style === 'manga' ? 0x000000 : INK, 1).fillRect(0, top, SCREEN_WIDTH, BAND_HEIGHT);
         g.fillStyle(theme.band, 1).fillRect(0, top + 6, SCREEN_WIDTH, BAND_HEIGHT - 12);
 
         if (style === 'manga') {
@@ -254,8 +254,8 @@ export class LevelIntroModal implements Modal {
             });
             halftoneFade(g, 760, top + 10, 520, BAND_HEIGHT - 64, theme.accent, 14, 6, 'right', 0.8);
         } else {
-            halftoneFade(g, 700, top + 10, 580, BAND_HEIGHT - 20, theme.accent, 14, 6, 'right', style === 'noir' ? 0.45 : 0.7);
-            halftoneFade(g, 0, top + 10, 380, BAND_HEIGHT - 20, theme.accent, 14, 5, 'left', style === 'noir' ? 0.3 : 0.45);
+            halftoneFade(g, 700, top + 10, 580, BAND_HEIGHT - 20, theme.accent, 14, 6, 'right', style === 'retro' ? 0.45 : 0.7);
+            halftoneFade(g, 0, top + 10, 380, BAND_HEIGHT - 20, theme.accent, 14, 5, 'left', style === 'retro' ? 0.3 : 0.45);
         }
 
         const title = makeText(this.scene, SCREEN_WIDTH / 2, 6, name.toUpperCase(), 96, {

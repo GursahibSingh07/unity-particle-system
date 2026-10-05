@@ -1,16 +1,15 @@
 import Phaser from 'phaser';
-import { LEVELS, SANDBOX } from '../config/levels';
-import { RADIATIONS } from '../config/radiation';
+import { LEVELS } from '../config/levels';
 import { Events } from '../events';
-import { Progress } from '../state';
-import type { MonsterId, RadiationId, StyleId } from '../types';
+import type { ArtStyle, MonsterId, RayMode, StyleId, UpgradeId, WeaponRule } from '../types';
 import { DialogModal, LevelIntroModal, type Modal, type ModalHooks } from '../ui/Captions';
-import { CreditsModal, GuideTruthModal, ItemGetModal, ReportModal } from '../ui/Cards';
+import { CreditsModal, GuideTruthModal, ReportModal, UpgradeModal } from '../ui/Cards';
 import { HitWords } from '../ui/HitWords';
 import { Hud } from '../ui/Hud';
 import { Overlays } from '../ui/Overlays';
 import { PausePage } from '../ui/PausePage';
-import { artStyleOf } from '../ui/theme';
+import { STYLE_THEME, artStyleOf } from '../ui/theme';
+import { Wheel, type WeaponStatus } from '../ui/Wheel';
 
 export { FONT } from '../ui/theme';
 
@@ -18,7 +17,7 @@ export { FONT } from '../ui/theme';
 type Task =
     | { kind: 'intro'; level: number; name: string; style: StyleId; lines: string[] }
     | { kind: 'dialog'; lines: string[] }
-    | { kind: 'itemGet'; id: RadiationId }
+    | { kind: 'itemGet'; ids: UpgradeId[] }
     | { kind: 'screen'; name: string };
 
 const toLines = (lines: unknown): string[] =>
@@ -30,6 +29,7 @@ const toLines = (lines: unknown): string[] =>
  */
 export class UI extends Phaser.Scene {
     private hud!: Hud;
+    private wheel!: Wheel;
     private words!: HitWords;
     private overlays!: Overlays;
     private queue: Task[] = [];
@@ -37,10 +37,9 @@ export class UI extends Phaser.Scene {
     private page?: PausePage;
     private ending = false;
     private levelIndex = -1;
-    private roomIndex = 0;
+    /** The era's own style, and the one the square is drawn in right now (the boss changes it) */
     private style: StyleId = 'goldenAge';
-    /** Radiations seen in use that the saved progress does not list (dev jumps, the sandbox) */
-    private seen = new Set<RadiationId>();
+    private artStyle: ArtStyle = 'goldenAge';
 
     constructor() {
         super('UI');
@@ -53,49 +52,76 @@ export class UI extends Phaser.Scene {
         this.page = undefined;
         this.ending = false;
         this.levelIndex = -1;
-        this.roomIndex = 0;
         this.style = 'goldenAge';
-        this.seen = new Set();
+        this.artStyle = 'goldenAge';
 
         this.hud = new Hud(this);
+        this.wheel = new Wheel(this);
         this.words = new HitWords(this);
         this.overlays = new Overlays(this);
-        this.refreshOwned();
 
         this.listen();
         const keyboard = this.input.keyboard!;
         // Stops Tab leaving the canvas and Space scrolling the page the game is embedded in
-        keyboard.addCapture(['TAB', 'SPACE']);
+        keyboard.addCapture(['TAB', 'SPACE', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
         keyboard.on('keydown', this.onKey, this);
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            if (pointer.leftButtonDown()) {
+            if (!pointer.leftButtonDown()) {
+                return;
+            }
+            if (this.page) {
+                this.page.click(pointer.x, pointer.y);
+            } else {
                 this.modal?.advance();
             }
         });
+    }
+
+    update(_time: number, delta: number) {
+        // The game's clocks stop under the pause page, so the ones mirrored here stop too
+        const frozen = !!this.page;
+        this.wheel.update(delta, frozen);
+        this.overlays.update(delta, frozen);
     }
 
     private listen() {
         const bus = this.game.events;
         const handlers: [string, (...args: never[]) => void][] = [
             [Events.PLAYER_HEALTH_CHANGED, (health: number, max: number) => this.hud.setHealth(health, max)],
-            [Events.ENERGY_CHANGED, (energy: number, max: number) => this.hud.setEnergy(energy, max)],
-            [Events.RADIATION_CHANGED, this.onRadiation],
+            [Events.ENERGY_CHANGED, (energy: number, max: number) => this.wheel.setEnergy(energy, max)],
+            [
+                Events.WEAPON_STATE,
+                (rule: WeaponRule, mode: RayMode, index: number, status: WeaponStatus) => this.wheel.setState(rule, mode, index, status),
+            ],
+            [Events.DASH_STATE, (left: number, max: number, wait: number) => this.wheel.setDash(left, max, wait)],
+            [Events.DASHED, () => this.wheel.dashed()],
             [Events.ROOM_STARTED, this.onRoom],
             [Events.HEALTH_UPGRADE, () => this.hud.celebrate()],
             [Events.HIT, (x: number, y: number, multiplier: number) => this.words.show(x, y, multiplier)],
             [Events.BANNER, (text: string) => this.overlays.setBanner(typeof text === 'string' ? text : '')],
             [Events.SECRET_FOUND, () => this.overlays.secretFlourish()],
-            [Events.GUIDE_UNLOCKED, (id: MonsterId) => this.overlays.guideToast(id, artStyleOf(this.style))],
+            [Events.GUIDE_UNLOCKED, (id: MonsterId) => this.overlays.guideToast(id, this.artStyle)],
+            [Events.ERA_TIMER, (secondsLeft: number) => this.hud.setTimer(secondsLeft)],
+            [Events.CHECKPOINT, () => this.overlays.checkpoint()],
+            [Events.SURGE, () => this.overlays.surge()],
+            [Events.BOSS_TELEGRAPH, (style: StyleId, inMs: number) => this.overlays.eraShift(style, inMs)],
+            [Events.ERA_SWAPPED, this.onEraSwapped],
+            [Events.HAZARD, (kind: string, on: boolean) => this.overlays.hazard(kind, !!on)],
             [
                 Events.ENDING_STARTED,
                 () => {
                     this.ending = true;
+                    this.artStyle = 'plain';
                     this.hud.goPlain();
+                    this.wheel.goPlain();
+                    this.overlays.clear();
                 },
             ],
             [Events.LEVEL_STARTED, this.onLevel],
             [Events.DIALOG, (lines: string[]) => this.enqueue({ kind: 'dialog', lines: toLines(lines) })],
-            [Events.ITEM_GET, this.onItemGet],
+            [Events.UPGRADE_GET, (ids: UpgradeId[]) => this.onUpgrade(ids)],
+            // Nothing in v2 sends this, but anything that still does gets the same card
+            [Events.ITEM_GET, (id: UpgradeId) => this.onUpgrade([id])],
             [Events.SHOW_SCREEN, (name: string) => this.enqueue({ kind: 'screen', name })],
         ];
         for (const [name, handler] of handlers) {
@@ -122,39 +148,47 @@ export class UI extends Phaser.Scene {
         });
     }
 
-    private onRadiation(id: RadiationId) {
-        if (!RADIATIONS[id]) {
-            return;
-        }
-        this.seen.add(id);
-        this.refreshOwned();
-        this.hud.setRadiation(id);
+    private setStyle(style: StyleId) {
+        this.artStyle = artStyleOf(style);
+        this.hud.setStyle(style);
     }
 
     private onRoom(levelName: string, roomNumber: number, totalRooms: number) {
-        this.levelIndex = LEVELS.findIndex((level) => level.name === levelName);
-        this.roomIndex = roomNumber - 1;
-        const level = LEVELS[this.levelIndex] ?? (SANDBOX.name === levelName ? SANDBOX : undefined);
+        const index = LEVELS.findIndex((level) => level.name === levelName);
+        const level = LEVELS[index];
+        // A different era (or the same one begun again): the clock and the warnings start clean
+        this.hud.hideTimer();
+        this.overlays.clear();
+        this.levelIndex = index;
         if (level) {
             this.style = level.style;
+            this.setStyle(level.style);
+            this.hud.setEra(levelName, index + 1, LEVELS.length);
+        } else {
+            // The sandbox: its rooms are what is counted
+            this.hud.setEra(String(levelName ?? ''), roomNumber, totalRooms);
         }
-        this.hud.setRoom(levelName, roomNumber, totalRooms);
-        this.refreshOwned();
     }
 
     private onLevel(levelNumber: number, name: string, style: StyleId, introText: string[]) {
-        this.style = style ?? this.style;
+        if (style && STYLE_THEME[style]) {
+            this.style = style;
+            this.setStyle(style);
+        }
         this.enqueue({ kind: 'intro', level: levelNumber, name: String(name ?? ''), style: this.style, lines: toLines(introText) });
     }
 
-    private onItemGet(id: RadiationId) {
-        this.seen.add(id);
-        this.refreshOwned();
-        this.enqueue({ kind: 'itemGet', id });
+    private onEraSwapped(style: StyleId) {
+        if (!style || !STYLE_THEME[style]) {
+            return;
+        }
+        this.setStyle(style);
+        this.overlays.eraSwapped(style);
     }
 
-    private refreshOwned() {
-        this.hud.setOwned([...new Set([...Progress.radiations(this.registry), ...this.seen])]);
+    private onUpgrade(ids: unknown) {
+        const list = (Array.isArray(ids) ? ids : [ids]).filter((id): id is UpgradeId => typeof id === 'string');
+        this.enqueue({ kind: 'itemGet', ids: list });
     }
 
     private enqueue(task: Task) {
@@ -215,7 +249,7 @@ export class UI extends Phaser.Scene {
             case 'dialog':
                 return task.lines.length > 0 ? new DialogModal(this, task.lines, false, hooks) : undefined;
             case 'itemGet':
-                return new ItemGetModal(this, task.id, hooks);
+                return task.ids.length > 0 ? new UpgradeModal(this, task.ids.slice(0, 4), hooks) : undefined;
             case 'screen':
                 if (task.name === 'report') {
                     return new ReportModal(this, hooks);
@@ -240,14 +274,18 @@ export class UI extends Phaser.Scene {
         if (this.page) {
             if (pauseKey) {
                 this.closePause();
-            } else if (['Tab', 'KeyQ', 'KeyE', 'ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(code)) {
-                this.page.turn();
+            } else if (code === 'Tab' || code === 'KeyQ' || code === 'KeyE') {
+                this.page.turn(code === 'KeyQ' || (code === 'Tab' && event.shiftKey) ? -1 : 1);
                 this.game.events.emit(Events.UI_SELECT);
+            } else {
+                this.page.key(code);
             }
             return;
         }
         if (this.modal) {
             if (code === 'Space' || code === 'Enter' || code === 'NumpadEnter') {
+                // Space is also the dash: this press belongs to the caption, not to the game
+                event.stopPropagation();
                 this.modal.advance();
             }
             return;
@@ -266,8 +304,8 @@ export class UI extends Phaser.Scene {
         this.scene.pause('Game');
         this.page = new PausePage(this, {
             levelIndex: this.levelIndex,
-            roomIndex: this.roomIndex,
-            style: artStyleOf(this.style),
+            style: this.artStyle,
+            select: () => this.game.events.emit(Events.UI_SELECT),
         });
         this.game.events.emit(Events.PAUSED, true);
         this.game.events.emit(Events.UI_SELECT);

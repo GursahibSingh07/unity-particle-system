@@ -1,32 +1,22 @@
 import type { LevelDef } from '../../types';
+import { SQUARE_LAYOUT } from '../square';
 
-// The boss, "The Final Page". One room, one wave: The Prism.
-// The Prism is 32x32 and cannot use tiles next to a solid, so the floor is kept open:
-// four crates near the corners give cover from its volleys without boxing it in.
+// Era 5, "The Final Page". The square, one wave, one Prism. It starts with everything
+// (ERA_RULES.finalPage); every third attack it switches the era, and the machine obeys that
+// era's rule until the next switch. No grants and no secret. Notes are in docs/LEVELS.md.
 export const boss: LevelDef = {
     name: 'The Final Page',
     style: 'finalPage',
-    radiations: ['radio', 'infrared', 'ultraviolet', 'gamma'],
+    radiations: ['blue', 'red', 'green', 'white', 'uv'],
     introText: [
-        'It arrives howling. It flashes red, then blue.',
-        'Every colour at once. Every monster in one.',
-        'This is the last page, Light Handler. Turn it.',
+        'It comes wailing up the street. Red, then blue.',
+        'It changes the page. The machine changes with it.',
+        'Watch the sign above its head.',
     ],
     rooms: [
         {
-            layout: [
-                '####################',
-                '#..................#',
-                '#...o..........o...#',
-                '#..................#',
-                '#........,,........#',
-                '#........,,........#',
-                '#..................#',
-                '#...o.....P....o...#',
-                '#..................#',
-                '####################',
-            ],
-            waves: [{ spawns: [{ monster: 'prism', count: 1 }] }],
+            layout: [...SQUARE_LAYOUT],
+            waves: [{ spawns: [{ monster: 'prism', count: 1 }], delay: 1200 }],
         },
     ],
 };

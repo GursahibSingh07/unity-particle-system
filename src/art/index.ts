@@ -10,7 +10,7 @@ import { TILES } from './sprites/tiles';
 // All of the game's art is drawn here at boot, from the character grids in ./sprites and
 // the palettes in ./palettes.ts. Texture keys and frame orders are listed in docs/DESIGN.md.
 
-export const ART_STYLES: ArtStyle[] = ['goldenAge', 'noir', 'manga', 'plain'];
+export const ART_STYLES: ArtStyle[] = ['goldenAge', 'cyberpunk', 'retro', 'manga', 'plain'];
 
 /** Baked once per style, as `{key}-{style}` */
 export const STYLED_SHEETS: SheetDef[] = [TILES, PLAYER, MACHINE, ...MONSTER_SHEETS, PROJECTILE];

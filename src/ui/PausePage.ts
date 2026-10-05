@@ -1,56 +1,64 @@
 import Phaser from 'phaser';
 import { LEVELS } from '../config/levels';
+import { GUIDE } from '../config/text';
 import { Progress } from '../state';
-import type { ArtStyle, LevelDef } from '../types';
-import { burst, burstPoints, controlsRow, dashedRect, panel, pixelNumber } from './draw';
-import { GUIDE_ORDER, GuideCard } from './GuideCard';
+import type { ArtStyle, LevelDef, MonsterId } from '../types';
+import { burst, burstPoints, controlsRow, dashedRect, panel, pixelNumber, pixelNumberWidth } from './draw';
+import { GUIDE_ORDER, GuideCard, guideSprite } from './GuideCard';
 import { LABELS } from './labels';
-import {
-    Depth,
-    GREY,
-    INK,
-    PAPER,
-    PAPER_SHADE,
-    PENCIL,
-    RED,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-    STYLE_THEME,
-    YELLOW,
-    artStyleOf,
-    makeText,
-} from './theme';
+import { SettingsPanel } from './SettingsPanel';
+import { Depth, GREY, INK, PAPER, PAPER_SHADE, PENCIL, RED, SCREEN_HEIGHT, SCREEN_WIDTH, STYLE_THEME, YELLOW, makeText } from './theme';
 
 const SHEET = { x: 50, y: 26, width: 1180, height: 668 };
 const CONTENT = { x: 78, y: 112, width: 1124, height: 456 };
-const LABEL_COLUMN = 236;
-const GUTTER = 14;
-/** Kept clear at the right of the page for the tally */
-const TALLY_COLUMN = 260;
-const ROOM_COLS = 20;
-const ROOM_ROWS = 10;
+
+/** The city pictures are 640x320: half size is a panel */
+const PANEL_WIDTH = 320;
+const PANEL_HEIGHT = 160;
+const PANEL_CAPTION = 36;
+const PANEL_GAP_X = 40;
+const PANEL_GAP_Y = 30;
+const PANEL_COLUMNS = 3;
+const BOSS_SLICES: ArtStyle[] = ['goldenAge', 'cyberpunk', 'retro', 'manga'];
+
+const GUIDE_COLUMNS = 4;
+const CELL_WIDTH = 112;
+const CELL_GAP = 10;
 
 export interface PauseContext {
-    /** Index into LEVELS of the level being played, or -1 (the sandbox is not on the page) */
+    /** Index into LEVELS of the era being played, or -1 (the sandbox is not on the page) */
     levelIndex: number;
-    /** Zero-based room being played */
-    roomIndex: number;
-    /** The palette the current level's sprites are baked in */
+    /** The palette the square is drawn in right now */
     style: ArtStyle;
+    /** A setting was changed or a page turned: sound a blip */
+    select: () => void;
 }
 
-type Tab = 'map' | 'guide';
+const TABS = ['map', 'guide', 'settings'] as const;
+type Tab = (typeof TABS)[number];
+const TAB_LABELS: Record<Tab, string> = { map: LABELS.mapTab, guide: LABELS.guideTab, settings: LABELS.settingsTab };
+
+interface Area {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    act: () => void;
+}
 
 /**
- * The pause screen is the comic itself: one strip per level, one panel per room, inked once
- * the room is cleared. The second tab is the Handler's Field Guide.
+ * The pause screen is the comic itself: one panel per era, inked once the era is cleared. The
+ * second tab is the Handler's Field Guide, the third the settings.
  */
 export class PausePage {
     private readonly root: Phaser.GameObjects.Container;
     private content?: Phaser.GameObjects.Container;
     private header?: Phaser.GameObjects.Container;
+    private settings?: SettingsPanel;
     private blink?: Phaser.Tweens.Tween;
+    private areas: Area[] = [];
     private tab: Tab = 'map';
+    private guideIndex = 0;
 
     constructor(
         private readonly scene: Phaser.Scene,
@@ -69,18 +77,63 @@ export class PausePage {
             strokeThickness: 8,
             drop: 3,
         }).setOrigin(1, 0);
-        const resume = makeText(scene, SCREEN_WIDTH / 2, 660, LABELS.resume, 17, { bold: true, color: RED }).setOrigin(0.5);
+        const resume = makeText(scene, SCREEN_WIDTH / 2, 662, LABELS.resume, 17, { bold: true, color: RED }).setOrigin(0.5);
 
-        this.root = scene.add.container(0, 0, [g, paused, resume, ...controlsRow(scene, SCREEN_WIDTH / 2, 600, 17)]);
+        this.root = scene.add.container(0, 0, [g, paused, resume, ...controlsRow(scene, SCREEN_WIDTH / 2, 602, 16, INK, PAPER, CONTENT.width)]);
         this.root.setDepth(Depth.pause).setAlpha(0);
         scene.tweens.add({ targets: this.root, alpha: 1, duration: 90 });
+
+        // Open the guide on a page that has something on it
+        const unlocked = Progress.guide(scene.registry);
+        this.guideIndex = Math.max(0, GUIDE_ORDER.findIndex((id) => unlocked.includes(id)));
         this.build();
     }
 
-    /** Any direction flips between the two tabs */
-    turn() {
-        this.tab = this.tab === 'map' ? 'guide' : 'map';
+    /** Q and E (and Tab) turn the page */
+    turn(step: 1 | -1) {
+        this.tab = TABS[(TABS.indexOf(this.tab) + step + TABS.length) % TABS.length];
         this.build();
+    }
+
+    /** Any other key: the open tab may have a use for it. Returns true if it did. */
+    key(code: string): boolean {
+        if (this.tab === 'settings') {
+            return this.settings?.key(code) ?? false;
+        }
+        if (this.tab === 'guide') {
+            const moves: Record<string, number> = {
+                ArrowLeft: -1,
+                KeyA: -1,
+                ArrowRight: 1,
+                KeyD: 1,
+                ArrowUp: -GUIDE_COLUMNS,
+                KeyW: -GUIDE_COLUMNS,
+                ArrowDown: GUIDE_COLUMNS,
+                KeyS: GUIDE_COLUMNS,
+            };
+            const move = moves[code];
+            if (move === undefined) {
+                return false;
+            }
+            const count = GUIDE_ORDER.length;
+            const next = Math.abs(move) === 1 ? (this.guideIndex + move + count) % count : this.guideIndex + move;
+            if (next >= 0 && next < count && next !== this.guideIndex) {
+                this.guideIndex = next;
+                this.build();
+                this.context.select();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    click(x: number, y: number) {
+        const area = this.areas.find((one) => x >= one.x && x < one.x + one.width && y >= one.y && y < one.y + one.height);
+        if (area) {
+            area.act();
+        } else if (this.tab === 'settings') {
+            this.settings?.click(x, y);
+        }
     }
 
     destroy() {
@@ -94,8 +147,10 @@ export class PausePage {
         this.blink = undefined;
         this.header?.destroy();
         this.content?.destroy();
+        this.settings = undefined;
+        this.areas = [];
         this.header = this.buildTabs();
-        this.content = this.tab === 'map' ? this.buildMap() : this.buildGuide();
+        this.content = this.tab === 'map' ? this.buildMap() : this.tab === 'guide' ? this.buildGuide() : this.buildSettings();
         this.root.add([this.header, this.content]);
     }
 
@@ -103,12 +158,9 @@ export class PausePage {
         const g = this.scene.add.graphics();
         const parts: Phaser.GameObjects.GameObject[] = [g];
         let x = CONTENT.x;
-        for (const [tab, label] of [
-            ['map', LABELS.mapTab],
-            ['guide', LABELS.guideTab],
-        ] as [Tab, string][]) {
+        for (const tab of TABS) {
             const active = tab === this.tab;
-            const text = makeText(this.scene, 0, 0, label, 24, { bold: true, color: active ? PAPER : INK }).setOrigin(0.5);
+            const text = makeText(this.scene, 0, 0, TAB_LABELS[tab], 24, { bold: true, color: active ? PAPER : INK }).setOrigin(0.5);
             const width = Math.ceil(text.width) + 40;
             // The open tab stands taller and joins the rule beneath it
             const top = active ? 46 : 54;
@@ -116,158 +168,258 @@ export class PausePage {
             g.fillStyle(active ? RED : PAPER_SHADE, 1).fillRect(x + 4, top + 4, width - 8, 98 - top - 4);
             text.setPosition(x + width / 2, top + (98 - top) / 2 + 1);
             parts.push(text);
+            if (!active) {
+                this.areas.push({
+                    x,
+                    y: 44,
+                    width,
+                    height: 56,
+                    act: () => {
+                        this.tab = tab;
+                        this.build();
+                        this.context.select();
+                    },
+                });
+            }
             x += width + 8;
         }
-        parts.push(makeText(this.scene, x + 14, 74, LABELS.switchTabs, 16, { color: GREY }).setOrigin(0, 0.5));
+        const hint = this.tab === 'guide' ? `${LABELS.switchTabs}     ${LABELS.guideHint}` : LABELS.switchTabs;
+        const hintText = makeText(this.scene, x + 14, 74, hint, 16, { color: GREY }).setOrigin(0, 0.5);
+        // The hint gives way to the PAUSED stamp
+        const room = CONTENT.x + CONTENT.width - 210 - (x + 14);
+        if (hintText.width > room) {
+            hintText.setScale(room / hintText.width);
+        }
+        parts.push(hintText);
         return this.scene.add.container(0, 0, parts);
     }
 
     private buildMap() {
         const container = this.scene.add.container(0, 0);
-        const count = Math.max(1, LEVELS.length);
-        const stripHeight = Math.min(152, Math.floor(CONTENT.height / count));
-        const top = CONTENT.y + Math.round((CONTENT.height - stripHeight * count) / 2);
+        // One more cell than there are eras: the last holds the tally
+        const cells = LEVELS.length + 1;
+        const rows = Math.ceil(cells / PANEL_COLUMNS);
+        const cellHeight = PANEL_HEIGHT + PANEL_CAPTION;
+        const left = CONTENT.x + Math.round((CONTENT.width - PANEL_COLUMNS * PANEL_WIDTH - (PANEL_COLUMNS - 1) * PANEL_GAP_X) / 2);
+        const gapY = Math.min(PANEL_GAP_Y, Math.floor((CONTENT.height - 14 - rows * cellHeight) / Math.max(1, rows - 1)));
+        const top = CONTENT.y + 22 + Math.max(0, Math.round((CONTENT.height - 22 - rows * cellHeight - (rows - 1) * gapY) / 2));
+        const place = (index: number) => ({
+            x: left + (index % PANEL_COLUMNS) * (PANEL_WIDTH + PANEL_GAP_X),
+            y: top + Math.floor(index / PANEL_COLUMNS) * (cellHeight + gapY),
+        });
 
         LEVELS.forEach((level, index) => {
-            this.buildStrip(container, level, index, top + index * stripHeight, stripHeight);
+            const { x, y } = place(index);
+            this.buildPanel(container, level, index, x, y);
         });
-        this.buildTally(container);
+        const { x, y } = place(LEVELS.length);
+        this.buildTally(container, x, y);
         return container;
     }
 
-    private buildStrip(container: Phaser.GameObjects.Container, level: LevelDef, levelIndex: number, top: number, height: number) {
+    /** One era as one panel of the comic: its square, as it is drawn in that era */
+    private buildPanel(container: Phaser.GameObjects.Container, level: LevelDef, index: number, x: number, y: number) {
         const registry = this.scene.registry;
-        const theme = STYLE_THEME[level.style] ?? STYLE_THEME.goldenAge;
-        const rooms = level.rooms.length;
-        const panelsWidth = CONTENT.width - LABEL_COLUMN - TALLY_COLUMN;
-        const tile = Phaser.Math.Clamp(
-            Math.min(Math.floor((height - 22) / ROOM_ROWS), Math.floor((panelsWidth - GUTTER * (rooms - 1)) / rooms / ROOM_COLS)),
-            3,
-            13,
-        );
-        const width = tile * ROOM_COLS;
-        const panelHeight = tile * ROOM_ROWS;
-        const y = top + Math.round((height - panelHeight) / 2);
-
+        const cleared = Progress.isRoomCleared(registry, index, 0);
+        const current = index === this.context.levelIndex;
+        const secretFound = Progress.secrets(registry).some((key) => key.startsWith(`${index}:`));
         const g = this.scene.add.graphics();
         container.add(g);
 
-        const pageTag = makeText(this.scene, CONTENT.x, y + 2, LABELS.page, 17, { bold: true, color: RED });
-        pixelNumber(g, String(levelIndex + 1), CONTENT.x + Math.ceil(pageTag.width) + 14, y + 12, 2, RED);
-        const name = makeText(this.scene, CONTENT.x, y + 22, level.name, 28, { bold: true });
-        if (name.width > LABEL_COLUMN - 20) {
-            name.setScale((LABEL_COLUMN - 20) / name.width);
-        }
-        container.add([pageTag, name]);
-
-        level.rooms.forEach((room, roomIndex) => {
-            const x = CONTENT.x + LABEL_COLUMN + roomIndex * (width + GUTTER);
-            const cleared = Progress.isRoomCleared(registry, levelIndex, roomIndex);
-            const current = levelIndex === this.context.levelIndex && roomIndex === this.context.roomIndex;
-            const secretFound = Progress.secrets(registry).includes(`${levelIndex}:${roomIndex}`);
-
-            if (cleared) {
-                g.fillStyle(INK, 1).fillRect(x + 4, y + 4, width, panelHeight);
-                g.fillStyle(theme.floor, 1).fillRect(x, y, width, panelHeight);
-                room.layout.forEach((row, rowIndex) => {
-                    for (let column = 0; column < row.length; column++) {
-                        const char = row[column];
-                        // An unbroken secret wall is drawn as plain wall: the page keeps the secret too
-                        const wall = char === '#' || (char === 'S' && !secretFound);
-                        if (wall) {
-                            g.fillStyle(theme.wall, 1).fillRect(x + column * tile, y + rowIndex * tile, tile, tile);
-                        } else if (char === 'o') {
-                            g.fillStyle(theme.accent, 1).fillRect(x + column * tile + 2, y + rowIndex * tile + 2, tile - 4, tile - 4);
-                        } else if (char === 'S' || char === 'H') {
-                            g.fillStyle(YELLOW, 1).fillRect(x + column * tile, y + rowIndex * tile, tile, tile);
-                        }
-                    }
-                });
-                g.lineStyle(3, INK, 1).strokeRect(x, y, width, panelHeight);
-
-                g.fillStyle(INK, 1).fillRect(x, y + panelHeight - 24, 24, 24);
-                pixelNumber(g, String(roomIndex + 1), x + 12, y + panelHeight - 12, 2, PAPER);
-            } else {
-                g.fillStyle(PAPER_SHADE, 0.45).fillRect(x, y, width, panelHeight);
-                dashedRect(g, x, y, width, panelHeight, PENCIL, 9, 3);
-                const dot = Math.max(2, Math.min(5, Math.floor(panelHeight / 18)));
-                pixelNumber(g, String(roomIndex + 1), x + width / 2, y + panelHeight / 2, dot, PENCIL);
-            }
-
-            if (secretFound) {
-                const star = this.scene.add.graphics();
-                burst(star, burstPoints(0, 0, 17, 9, 8), YELLOW, INK, 3);
-                star.setPosition(x + width - 6, y + 6);
-                container.add(star);
-            }
-
-            if (current) {
-                const frame = this.scene.add.graphics();
-                frame.lineStyle(5, RED, 1).strokeRect(x - 5, y - 5, width + 10, panelHeight + 10);
-                const tag = makeText(this.scene, 0, 0, LABELS.here, 13, { bold: true, color: PAPER });
-                const tagWidth = Math.ceil(tag.width) + 12;
-                frame.fillStyle(RED, 1).fillRect(x - 7, y - 20, tagWidth, 18);
-                tag.setPosition(x - 1, y - 20);
-                container.add([frame, tag]);
-
-                const key = `player-${this.context.style}`;
-                if (this.scene.textures.exists(key)) {
-                    const scale = Math.max(1, Math.floor((panelHeight * 0.5) / 16));
-                    const hero = this.scene.add.image(x + width / 2, y + panelHeight / 2, key, 0).setScale(scale);
-                    container.add(hero);
+        if (cleared || current) {
+            g.fillStyle(INK, 1).fillRect(x + 5, y + 6, PANEL_WIDTH, PANEL_HEIGHT);
+            g.fillStyle(INK, 1).fillRect(x - 3, y - 3, PANEL_WIDTH + 6, PANEL_HEIGHT + 6);
+            // The boss page is every era at once
+            const styles = level.style === 'finalPage' ? BOSS_SLICES : [level.style];
+            const slice = 640 / styles.length;
+            styles.forEach((style, i) => {
+                const key = `city-${style}`;
+                if (!this.scene.textures.exists(key)) {
+                    g.fillStyle((STYLE_THEME[style] ?? STYLE_THEME.goldenAge).floor, 1).fillRect(x + (i * slice) / 2, y, slice / 2, PANEL_HEIGHT);
+                    return;
                 }
-                this.blink = this.scene.tweens.add({ targets: frame, alpha: 0.35, duration: 380, yoyo: true, repeat: -1 });
+                const image = this.scene.add.image(x, y, key).setOrigin(0).setScale(0.5).setCrop(i * slice, 0, slice, 320);
+                container.add(image);
+                if (current && !cleared) {
+                    // Pencilled in, not yet inked: the era is still being fought over
+                    image.setAlpha(0.8);
+                }
+            });
+            if (styles.length > 1) {
+                const cuts = this.scene.add.graphics();
+                cuts.fillStyle(INK, 1);
+                for (let i = 1; i < styles.length; i++) {
+                    cuts.fillRect(x + (i * slice) / 2 - 1, y, 3, PANEL_HEIGHT);
+                }
+                container.add(cuts);
             }
-        });
+        } else {
+            g.fillStyle(PAPER_SHADE, 0.45).fillRect(x, y, PANEL_WIDTH, PANEL_HEIGHT);
+            dashedRect(g, x, y, PANEL_WIDTH, PANEL_HEIGHT, PENCIL, 9, 3);
+            pixelNumber(g, String(index + 1), x + PANEL_WIDTH / 2, y + PANEL_HEIGHT / 2, 8, PENCIL);
+        }
+
+        // The caption under the panel: PAGE n and the era's name
+        const captionY = y + PANEL_HEIGHT + 20;
+        const reached = cleared || current;
+        const tag = makeText(this.scene, x, captionY, LABELS.page, 17, { bold: true, color: reached ? RED : PENCIL }).setOrigin(0, 0.5);
+        const numberX = x + Math.ceil(tag.width) + 8;
+        const number = String(index + 1);
+        const over = this.scene.add.graphics();
+        pixelNumber(over, number, numberX + pixelNumberWidth(number, 2) / 2, captionY, 2, reached ? RED : PENCIL);
+        const nameX = numberX + pixelNumberWidth(number, 2) + 12;
+        const name = makeText(this.scene, nameX, captionY, level.name, 24, { bold: true, color: reached ? INK : PENCIL }).setOrigin(0, 0.5);
+        const room = x + PANEL_WIDTH - nameX;
+        if (name.width > room) {
+            name.setScale(room / name.width);
+        }
+        container.add([tag, over, name]);
+
+        if (secretFound) {
+            const star = this.scene.add.graphics();
+            burst(star, burstPoints(2, 3, 20, 11, 8), INK, INK, 0);
+            burst(star, burstPoints(0, 0, 20, 11, 8), YELLOW, INK, 3);
+            star.setPosition(x + PANEL_WIDTH - 8, y + 8);
+            container.add(star);
+        }
+
+        if (current) {
+            const key = `player-${this.context.style}`;
+            if (this.scene.textures.exists(key)) {
+                container.add(this.scene.add.image(x + PANEL_WIDTH / 2, y + PANEL_HEIGHT / 2 + 14, key, 0).setScale(2));
+            }
+            const frame = this.scene.add.graphics();
+            frame.lineStyle(5, RED, 1).strokeRect(x - 6, y - 6, PANEL_WIDTH + 12, PANEL_HEIGHT + 12);
+            const here = makeText(this.scene, 0, 0, LABELS.here, 14, { bold: true, color: PAPER });
+            const hereWidth = Math.ceil(here.width) + 12;
+            frame.fillStyle(RED, 1).fillRect(x - 8, y - 24, hereWidth, 20);
+            here.setPosition(x - 2, y - 23);
+            container.add([frame, here]);
+            this.blink = this.scene.tweens.add({ targets: frame, alpha: 0.35, duration: 380, yoyo: true, repeat: -1 });
+        }
     }
 
-    /** The run so far, in the margin: how much of the comic has been inked */
-    private buildTally(container: Phaser.GameObjects.Container) {
+    /** The run so far, in the last cell: how much of the comic has been inked */
+    private buildTally(container: Phaser.GameObjects.Container, x: number, y: number) {
         const registry = this.scene.registry;
-        const rooms = LEVELS.reduce((sum, level) => sum + level.rooms.length, 0);
-        const cleared = Progress.clearedRooms(registry).filter((key) => !key.startsWith('sandbox')).length;
+        const cleared = LEVELS.filter((_, index) => Progress.isRoomCleared(registry, index, 0)).length;
         const guide = Progress.guide(registry).filter((id) => GUIDE_ORDER.includes(id)).length;
         const rows: [string, string][] = [
-            [`${Math.min(cleared, rooms)}/${rooms}`, LABELS.statPanels],
-            [`${guide}/${GUIDE_ORDER.length}`, LABELS.statGuide],
+            [LABELS.statPanels, `${cleared}/${LEVELS.length}`],
+            [LABELS.statGuide, `${guide}/${GUIDE_ORDER.length}`],
             // How many there are to find stays a secret too
-            [String(Progress.secrets(registry).length), LABELS.statSecrets],
+            [LABELS.statSecrets, String(Progress.secrets(registry).length)],
         ];
-        const x = CONTENT.x + CONTENT.width - 232;
-        const height = 118;
-        const top = CONTENT.y + Math.round((CONTENT.height - rows.length * height - (rows.length - 1) * 16) / 2);
         const g = this.scene.add.graphics();
         container.add(g);
-        rows.forEach(([value, label], index) => {
-            const y = top + index * (height + 16);
-            panel(g, x, y, 226, height, PAPER, 4, 5);
-            g.fillStyle(YELLOW, 1).fillRect(x + 4, y + 4, 218, 30);
-            g.fillStyle(INK, 1).fillRect(x + 4, y + 34, 218, 3);
-            container.add(makeText(this.scene, x + 113, y + 19, label, 17, { bold: true }).setOrigin(0.5));
-            pixelNumber(g, value, x + 113, y + 77, 6, RED);
+        const height = PANEL_HEIGHT + PANEL_CAPTION - 4;
+        panel(g, x, y, PANEL_WIDTH, height, PAPER, 4, 6);
+        const rowHeight = (height - 8) / rows.length;
+        rows.forEach(([label, value], index) => {
+            const top = y + 4 + index * rowHeight;
+            if (index > 0) {
+                g.fillStyle(INK, 1).fillRect(x + 4, top - 1, PANEL_WIDTH - 8, 3);
+            }
+            g.fillStyle(YELLOW, 1).fillRect(x + 4, top + (index > 0 ? 2 : 0), 10, rowHeight - (index > 0 ? 2 : 0));
+            container.add(makeText(this.scene, x + 26, top + rowHeight / 2 + 1, label, 19, { bold: true }).setOrigin(0, 0.5));
+            pixelNumber(g, value, x + PANEL_WIDTH - 22 - pixelNumberWidth(value, 4) / 2, top + rowHeight / 2 + 1, 4, RED);
         });
     }
 
     private buildGuide() {
         const container = this.scene.add.container(0, 0);
-        const unlocked = Progress.guide(this.scene.registry);
-        const ended = Progress.ended(this.scene.registry);
-        const gap = 14;
-        const width = Math.floor((CONTENT.width - gap * (GUIDE_ORDER.length - 1)) / GUIDE_ORDER.length);
+        const registry = this.scene.registry;
+        const unlocked = Progress.guide(registry);
+        const ended = Progress.ended(registry);
+        const rows = Math.ceil(GUIDE_ORDER.length / GUIDE_COLUMNS);
+        const cellHeight = Math.floor((CONTENT.height - 8 - (rows - 1) * CELL_GAP) / rows);
+        const g = this.scene.add.graphics();
+        container.add(g);
 
         GUIDE_ORDER.forEach((id, index) => {
-            const card = new GuideCard(this.scene, CONTENT.x + index * (width + gap), CONTENT.y + 6, id, {
-                width,
-                height: CONTENT.height - 14,
-                style: artStyleOf(this.context.style),
-                unlocked: unlocked.includes(id),
-                truthSlot: ended,
+            const x = CONTENT.x + (index % GUIDE_COLUMNS) * (CELL_WIDTH + CELL_GAP);
+            const y = CONTENT.y + 8 + Math.floor(index / GUIDE_COLUMNS) * (cellHeight + CELL_GAP);
+            this.buildCell(container, g, id, x, y, cellHeight, unlocked.includes(id), ended, index === this.guideIndex);
+            this.areas.push({
+                x,
+                y,
+                width: CELL_WIDTH,
+                height: cellHeight,
+                act: () => {
+                    if (this.guideIndex !== index) {
+                        this.guideIndex = index;
+                        this.build();
+                        this.context.select();
+                    }
+                },
             });
-            if (ended && unlocked.includes(id)) {
+        });
+
+        const id = GUIDE_ORDER[this.guideIndex];
+        if (id) {
+            const x = CONTENT.x + GUIDE_COLUMNS * (CELL_WIDTH + CELL_GAP) + 16;
+            const open = unlocked.includes(id);
+            const card = new GuideCard(this.scene, x, CONTENT.y + 8, id, {
+                width: CONTENT.x + CONTENT.width - x - 6,
+                height: CONTENT.height - 16,
+                style: this.context.style,
+                unlocked: open,
+                truthSlot: ended,
+                pictureHeight: ended ? 150 : 190,
+                titleSize: 36,
+                noteSizes: [24, 22, 20, 18, 16],
+                truthHeight: 108,
+            });
+            if (ended && open) {
                 card.revealTruth(false);
             }
             container.add(card.container);
-        });
+        }
         return container;
+    }
+
+    /** A thumbnail in the guide's index */
+    private buildCell(
+        container: Phaser.GameObjects.Container,
+        g: Phaser.GameObjects.Graphics,
+        id: MonsterId,
+        x: number,
+        y: number,
+        height: number,
+        open: boolean,
+        ended: boolean,
+        selected: boolean,
+    ) {
+        const theme = STYLE_THEME[ended ? 'plain' : this.context.style] ?? STYLE_THEME.goldenAge;
+        const pictureHeight = height - 30;
+        if (selected) {
+            g.fillStyle(RED, 1).fillRect(x - 5, y - 5, CELL_WIDTH + 10, height + 10);
+        }
+        g.fillStyle(INK, 1).fillRect(x, y, CELL_WIDTH, height);
+        g.fillStyle(open ? theme.floor : PAPER_SHADE, 1).fillRect(x + 3, y + 3, CELL_WIDTH - 6, pictureHeight - 3);
+        g.fillStyle(selected ? YELLOW : PAPER, 1).fillRect(x + 3, y + pictureHeight + 3, CELL_WIDTH - 6, height - pictureHeight - 6);
+
+        const sprite = guideSprite(this.scene, id, ended && open ? 'plain' : this.context.style, pictureHeight - 16, 4);
+        if (sprite) {
+            sprite.setPosition(x + CELL_WIDTH / 2, y + 2 + pictureHeight / 2);
+            if (!open) {
+                sprite.setTint(INK).setTintMode(Phaser.TintModes.FILL).setAlpha(0.75);
+            }
+            container.add(sprite);
+        }
+        const title = makeText(this.scene, x + CELL_WIDTH / 2, y + height - 15, open ? (GUIDE[id]?.title ?? id) : LABELS.locked, 15, {
+            bold: true,
+            color: open ? INK : PENCIL,
+        }).setOrigin(0.5);
+        if (title.width > CELL_WIDTH - 12) {
+            title.setScale((CELL_WIDTH - 12) / title.width);
+        }
+        container.add(title);
+    }
+
+    private buildSettings() {
+        const width = 860;
+        this.settings = new SettingsPanel(this.scene, CONTENT.x + (CONTENT.width - width) / 2, CONTENT.y + 44, width, this.context.select);
+        return this.settings.container;
     }
 }

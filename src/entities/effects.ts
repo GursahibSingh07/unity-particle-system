@@ -4,9 +4,13 @@ import Phaser from 'phaser';
 
 /** Draw order within the room */
 export const DEPTH = {
+    /** The shadow a flyer casts on the ground */
+    shadow: 1.5,
     pickup: 2,
     monster: 4,
     player: 3,
+    /** Bats pass over everything that walks */
+    flyer: 4.5,
     projectile: 5,
     effect: 6,
 };
@@ -52,6 +56,8 @@ export function closingRing(
     const ring = scene.add.circle(x, y, radius).setStrokeStyle(1, color).setDepth(DEPTH.effect);
     ring.setScale(1.7);
     shadow.setScale(1.7);
+    // Whoever takes the ring away early (a spawn that is called off) takes its shadow too
+    ring.once(Phaser.GameObjects.Events.DESTROY, () => shadow.destroy());
     scene.tweens.add({
         targets: [ring, shadow],
         scale: 0.5,

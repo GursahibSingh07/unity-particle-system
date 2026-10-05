@@ -220,12 +220,23 @@ export class Navigator {
     readonly goal: Point = { x: 0, y: 0 };
 
     private blocked: boolean[] = [];
+    /** Only the tiles that stop a flyer */
+    private walled: boolean[] = [];
     private narrow!: FlowField;
     /** For monsters wider than a tile: tiles next to a solid count as blocked */
     private wide!: FlowField;
+    /** For flyers: the fountain and the street furniture are open air */
+    private air!: FlowField;
     private goalCell = -1;
 
-    constructor(private solids: Rect[]) {
+    /**
+     * `walls` are the solids that also stop flyers (buildings). Without it everything solid
+     * stops them, which is right for a room that has no props.
+     */
+    constructor(
+        private solids: Rect[],
+        private walls: Rect[] = solids,
+    ) {
         this.rebuild();
     }
 
@@ -236,6 +247,12 @@ export class Navigator {
             const { col, row } = cellOf(solid.x + solid.width / 2, solid.y + solid.height / 2);
             this.blocked[indexOf(col, row)] = true;
         }
+        this.walled = new Array(CELLS).fill(false);
+        for (const wall of this.walls) {
+            const { col, row } = cellOf(wall.x + wall.width / 2, wall.y + wall.height / 2);
+            this.walled[indexOf(col, row)] = true;
+        }
+        this.air = new FlowField(this.walled);
 
         const padded = this.blocked.map((_, i) => {
             const col = i % ROOM_COLS;
@@ -265,6 +282,7 @@ export class Navigator {
             this.goalCell = indexOf(col, row);
             this.narrow.compute(col, row);
             this.wide.compute(col, row);
+            this.air.compute(col, row);
         }
     }
 
@@ -277,9 +295,20 @@ export class Navigator {
         return this.blocked[indexOf(col, row)];
     }
 
+    /** True for a tile that stops flyers as well as walkers */
+    isWall(x: number, y: number) {
+        const { col, row } = cellOf(x, y);
+        return this.walled[indexOf(col, row)];
+    }
+
     /** True if a body of this radius can walk straight between the two points */
     canWalk(x1: number, y1: number, x2: number, y2: number, radius: number) {
         return segmentClear(x1, y1, x2, y2, this.solids, radius + CORNER_MARGIN);
+    }
+
+    /** True if a body of this radius can fly straight between the two points */
+    canFly(x1: number, y1: number, x2: number, y2: number, radius: number) {
+        return segmentClear(x1, y1, x2, y2, this.walls, radius + CORNER_MARGIN);
     }
 
     /** Walking distance to the goal in tiles, Infinity if it cannot be reached */
@@ -305,18 +334,26 @@ export class Navigator {
     /**
      * Writes the point a body at (x, y) should walk towards right now into `out`.
      * Returns false when the goal cannot be reached at all (the caller may then go straight).
+     * A `flying` body plans over the fountain and the furniture; only walls are in its way.
      */
-    waypoint(x: number, y: number, radius: number, out: Point) {
+    waypoint(x: number, y: number, radius: number, out: Point, flying = false) {
         out.x = this.goal.x;
         out.y = this.goal.y;
-        if (this.canWalk(x, y, this.goal.x, this.goal.y, radius)) {
+        const rects = flying ? this.walls : this.solids;
+        const pad = radius + CORNER_MARGIN;
+        if (segmentClear(x, y, this.goal.x, this.goal.y, rects, pad)) {
             return true;
         }
 
-        const field = this.fieldFor(radius);
+        let field = flying ? this.air : this.fieldFor(radius);
         let { col, row } = cellOf(x, y);
         if (field.distanceAt(col, row) === Infinity) {
-            return false;
+            // A wide body standing beside a wall (a street entry) is off the wide field:
+            // the narrow one still gets it out into the open
+            field = flying ? field : this.narrow;
+            if (field.distanceAt(col, row) === Infinity) {
+                return false;
+            }
         }
 
         for (let step = 0; step < LOOKAHEAD; step++) {
@@ -324,13 +361,15 @@ export class Navigator {
             if (!next) {
                 break;
             }
-            const centre = cellCentre(next.col, next.row);
+            // Written straight into `out`: this runs for every monster several times a second
+            const centreX = ROOM.x + next.col * TILE + TILE / 2;
+            const centreY = ROOM.y + next.row * TILE + TILE / 2;
             // Always accept the first step, so a monster pressed against a corner keeps moving
-            if (step > 0 && !this.canWalk(x, y, centre.x, centre.y, radius)) {
+            if (step > 0 && !segmentClear(x, y, centreX, centreY, rects, pad)) {
                 break;
             }
-            out.x = centre.x;
-            out.y = centre.y;
+            out.x = centreX;
+            out.y = centreY;
             col = next.col;
             row = next.row;
         }

@@ -1,168 +1,228 @@
-# Light Handler: Design Bible
+# Light Handler: Design Bible (v2)
 
-The working contract for art, audio, levels and code. If you change something here, tell everyone who builds against it. The team owns the design decisions in this file: edit them freely.
+The working contract for art, audio, eras and code. The design comes from the team's `docs/ideas.md`; where the ideas left a gap, the choice made here is marked **(default)** and is the team's to change. If you change something here, tell everyone who builds against it.
+
+Jam rules (`docs/rules.md`) that shape everything: a complete loop of 10-15 minutes; all three themes (Comic, Twist, Light); fresh original code; only free or self-made assets, credited; AI use disclosed.
 
 ## 1. The game in one paragraph
 
-A top-down action game in the spirit of the early Legend of Zelda games. The Light Handler fights monsters with the EMW Machine, switching between kinds of electromagnetic radiation to match each monster's weakness. Each level is a comic page in a different comic style. The ending reveals there were never any monsters: he has schizophrenia, he has been shining a torch at passers-by, and he is arrested for causing mild annoyance to the public.
+A top-down action game in the look of a 16-bit console RPG. The Light Handler defends a city square with the EMW Machine, turning its colour wheel to match the ray to the enemy. The square is the same place in every era, but each era it is drawn with less: fewer details, fewer colours. The Handler has schizophrenia and it is getting worse, and the player sees the world drain as he does. In the ending the detail returns, in plain daylight: there were never any monsters, he has been shining a pocket torch at passers-by, and he is arrested for causing mild annoyance to the public.
 
-## 2. Structure (about 12.5 minutes)
+## 2. Structure (about 12 minutes)
 
-| Part | Style | Rooms | Chest after room 1 | New monsters | Time |
-| --- | --- | --- | --- | --- | --- |
-| Cover + intro | Comic cover | - | (start with Radio) | - | 0.5 min |
-| Level 1 | Golden Age | 3 | Infrared | Swarmlet, then Frostling | 2.5 min |
-| Level 2 | Noir | 3 | Ultraviolet | Shade | 3 min |
-| Level 3 | Manga | 3 | Gamma | Ironclad | 3 min |
-| Boss | Swaps per phase | 1 | - | The Prism | 2.5 min |
-| Ending | Plain | - | - | - | 1 min |
+One level per era. Every era is the same city square (`src/config/square.ts`).
 
-The rules require 10-15 minutes. Playtime past 20 minutes is not judged.
+| # | Era (`ArtStyle`) | Look | Spawning | Given at the start | Rule | Time |
+| --- | --- | --- | --- | --- | --- | --- |
+| - | Cover + intro | - | - | - | - | 0.5 |
+| 1 | Golden (`goldenAge`) | Bright sunshine, every detail, bright monsters | 4 waves | Red, Blue, Green rays | Full wheel, no dash | 2.5 |
+| 2 | Cyberpunk (`cyberpunk`) | Dusk, neon, fewer details, duller monsters | Continuous, 2:00 | Dash | Blue is taken away; dash, 3s cooldown | 2 |
+| 3 | Retro (`retro`) | Dark, dull, fewer details still | Continuous and dense, 2:00 | Double dash, UV lens | Overdrive; wheel locked and turning by itself; two dashes, 5s cooldown; UV mode | 2 |
+| 4 | Manga (`manga`) | Black and white, sharp outlines, almost no detail | Continuous bullet hell, 2:00 | Unprism (White) | Locked to White | 2 |
+| 5 | Boss (`finalPage`) | Swaps era with the boss | The Prism | - | Whatever era the boss has switched to | 2 |
+| - | Ending (`plain`) | Full detail returns, natural daylight | - | - | A pocket torch | 1 |
+
+- **Golden's four waves** introduce: 1 rats, 2 slimes and bats, 3 Ironclad, 4 Golem.
+- **Timed eras** end when the clock runs out, after a final surge. Dying restarts from the last 45-second checkpoint **(default)**, so the length does not depend on skill.
+- **First appearances** of the other classes: speed enemies in Cyberpunk (zig-zag bat first, then the skitter), stealth in Retro (ghost first, then the wraith), projectile in Manga (snowman and acid slime).
 
 ## 3. Design pillars
 
-1. **Teach by play, not text.** The first room is safe. Each new monster first appears alone. No tutorial pop-ups.
-2. **Hide what helps to hide.** Weaknesses are never stated. The player learns them from feedback: a big "FZZT!" for a weakness, a small "tink" for a resist.
-3. **Hidden mercy.** The player's hurtbox is smaller than the sprite. After two deaths in the same room, a heart appears at the start.
-4. **Telegraph everything.** Every monster attack has a visible wind-up. Spawns are announced before the monster appears.
-5. **Every level gives something.** The player starts with Radio only. In each level, room 1 is cleared with the tools already owned; a chest then appears holding that level's new radiation (item-get jingle), and rooms 2 and 3 are built around using it. The boss needs all four.
-6. **One secret per level.** A cracked wall that only one radiation breaks, hiding a health upgrade worth +2 health blocks.
-7. **The twist re-reads everything.** Field Guide entries and the page map are written so the ending changes their meaning.
+1. **Teach by play, not text.** Each enemy first appears alone or in a gentle mix.
+2. **Hide what helps to hide.** Multipliers are never stated. The player learns them from the comic hit words: big for a strong ray, tiny and grey for a weak one.
+3. **The rule of each era is the lesson of each era.** Losing Blue, the locked wheel, White only: each forces a different way to play with the same square and the same hands.
+4. **Hidden mercy.** Small hurtbox; a heart waits at the start after two deaths.
+5. **Telegraph everything.** Every attack has a visible wind-up. Every spawn is announced.
+6. **The world drains.** Same square, less of it each era. The ending gives it all back.
+7. **The twist re-reads everything.** Field Guide notes are true of the real thing too.
 
-## 4. Metagame
+## 4. Controls (default)
 
-- **Field Guide.** The Handler's notebook. An entry unlocks the first time a monster is killed, written in his confident voice. After the ending each entry shows its real meaning.
-- **The page map.** The pause screen is a comic page. Each cleared room is an inked panel. At the ending the same page is redrawn as a police incident report.
+| Input | Action |
+| --- | --- |
+| W A S D | Move |
+| Mouse | Aim |
+| Left mouse button | Fire |
+| Q / E | Turn the colour wheel left / right |
+| F | Switch mode (RGB, UV, Unprism), when the era allows more than one |
+| Space | Dash |
+| Esc | Pause (page map, Field Guide, Settings) |
 
-## 5. Radiation
+Space also advances captions and cards; a dash must not fire while one is showing.
 
-One shared energy pool. Keys 1-4 select, left mouse fires.
+## 5. The EMW Machine
 
-| Key | Type | How it fires | Weakness of |
+One shared energy pool. The colour wheel is drawn at the bottom right of the screen.
+
+| Ray (`RayId`) | Mode | Shape | Against classes |
 | --- | --- | --- | --- |
-| 1 | Radio | Ring pulse around the player, knockback | Swarmlet |
-| 2 | Infrared | Continuous beam, stopped by walls | Frostling |
-| 3 | Ultraviolet | Short wide cone flash, reveals and stuns | Shade |
-| 4 | Gamma | Charged thin ray, passes through walls and armour | Ironclad |
+| `blue` | RGB | A cone in front that hits everything in it | 1x all |
+| `red` | RGB | A straight laser. Strongest up close, falling off with distance: weaker than Blue at full range | 1.5x armor |
+| `green` | RGB | Hold to charge, release a blob that slows everything it touches | 2x speed |
+| `white` | Unprism | A 360 degree pushback of enemies and projectiles | 1.5x swarm and projectile, 0.25x others |
+| `uv` | UV | A cone that reveals stealth enemies and halves their health | 0x others |
 
-Damage multipliers: weak 2x, neutral 1x, resistant 0.25x (`src/systems/Combat.ts`).
+The class table lives in `RAY_VS_CLASS` in `src/config/rays.ts` and is read through `damageMultiplier(def, ray)` in `src/systems/Combat.ts`. The boss counts as 1x for Blue, Red and Green, 0.25x for White, 0x for UV, except where its own code says otherwise.
 
-## 6. Monsters
+**Weapon rules** (`WeaponRule` in `src/types.ts`, one per era on `LevelDef.rule`):
 
-| Monster | Size | Behaviour | Weak to | In the ending, really |
-| --- | --- | --- | --- | --- |
-| Swarmlet | 8x8 | Flocks at the player in groups | Radio | Pigeons |
-| Frostling | 16x16 | Chases directly | Infrared | An ice-cream vendor |
-| Shade | 16x16 | Nearly invisible, dashes; untouchable until revealed | Ultraviolet | A man in a dark coat |
-| Ironclad | 16x16 | Slow, armoured, throws projectiles after a wind-up | Gamma | A cyclist in a helmet |
-| The Prism | 32x32 | Four colour phases, one weakness each; spawns minions | Cycles | A police car |
+| Era | `wheel` | `modes` | Other |
+| --- | --- | --- | --- |
+| Golden | blue, red, green | rgb | no dash |
+| Cyberpunk | red, green | rgb | dash: 1 charge, 3000ms |
+| Retro | blue, red, green | rgb, uv | overdrive; `autoRotateMs` 5000 (default); dash: 2 charges, 5000ms |
+| Manga | (none) | unprism | dash: 2 charges, 5000ms |
+| Boss | blue, red, green | rgb, uv, unprism | dash: 2 charges, 5000ms; replaced by an era's rule when the boss switches era |
 
-## 7. Technical contract
+- **Overdrive:** fires twice as fast, hits twice as hard, drains energy twice as fast.
+- **Locked wheel:** Q and E do nothing; the wheel turns by itself every `autoRotateMs`, with a warning tick just before.
+- **Dash:** a short burst in the movement direction (or the aim direction when standing still). Nothing can hurt the player during it and he passes through enemies.
 
-### Coordinates
+## 6. Enemies
 
-- The world is **320x180 units**, drawn by the Game scene's camera at **zoom 4** onto a 1280x720 canvas. Constants are in `src/config/world.ts`.
-- **Tiles are 16x16.** A room is 20 columns by 10 rows, placed below a 20-unit HUD strip.
-- **All text lives in the UI scene**, which is not zoomed (1280x720 coordinates). To place UI over a world point, multiply world coordinates by 4.
-- Rendering uses nearest-neighbour filtering (`pixelArt: true`).
+| Id | Class | Behaviour | Really is (default) |
+| --- | --- | --- | --- |
+| `rat` | swarm | Runs at the player in packs | Pigeons, walking |
+| `slime` | swarm | Hops at the player in groups, a little tougher | Small dogs on a walker's leads |
+| `bat` | swarm | Flies straight at the player over props and the fountain | Starlings |
+| `ironclad` | armor | Slow, keeps its distance, throws after a wind-up | A cyclist in a helmet |
+| `golem` | armor | Rolls slowly at the player; rays stop at it, so it shields what is behind | A delivery man pushing a loaded trolley |
+| `zigbat` | speed | Fast, flies in a zig-zag | A kid weaving through on a scooter |
+| `skitter` | speed | Fast; dashes away when hit, so the player must aim again | A jogger |
+| `ghost` | stealth | Nearly invisible; dashes after a wind-up; untouchable until UV reveals it | A man in a dark coat |
+| `wraith` | stealth | A more aggressive ghost: faster, re-hides sooner, dashes in pairs | The cinema's doorman |
+| `snowman` | projectile | Throws snowballs that leave ice on the floor; ice slows the player | An ice-cream vendor |
+| `acidSlime` | projectile | Lobs acid that leaves a pool; the pool hurts over time | A window cleaner with a bucket |
+| `prism` | boss | See below | A police car |
 
-### Room layouts
+**The Prism.** It dashes at the player twice (each with a wind-up). Its third attack switches the era: a few seconds beforehand an icon of the coming era shows over its head (`BOSS_TELEGRAPH`), then the whole square redraws in that era and the machine obeys that era's rule (`ERA_SWAPPED`) until the next switch. It cycles Golden, Cyberpunk, Retro, Manga.
 
-`RoomDef.layout` is 10 strings of 20 characters:
+**Field Guide.** A page unlocks on the first kill of each enemy. After the ending every page shows what it really was.
+
+## 7. Secrets, hearts, upgrades
+
+- **Secrets:** one per era. A hairline crack in a building wall on the outer ring (`S` in the layout); nothing else gives it away. Only the era's `RoomDef.secret` ray breaks it. When it breaks, a health upgrade (+2 blocks) drops onto the floor in front of it.
+- **Hearts:** enemies drop one now and then, more often when the player is low. After two deaths at the same checkpoint a heart waits at the start. Never announced.
+- **Upgrades** are handed over as an era begins (`LevelDef.grants`), each on an item card. There are no chests.
+
+## 8. Settings and demo mode
+
+`src/settings.ts`, saved in the browser: music volume, sound volume, screen shake, demo mode. Reached from the cover and from the pause screen. With demo mode on, the cover offers every era to start from, with that era's upgrades already owned.
+
+## 9. Technical contract
+
+### Coordinates and scale
+
+- The world is **320x180 units**, shown at **zoom 4** on a 1280x720 canvas. Tiles are 16 units. The square is 20 by 10 tiles under a 20-unit HUD strip. Every speed, range and radius is in world units.
+- **v2 art has 2 texture pixels per world unit:** a tile is 32x32 pixels, a character 32x48. Sprites are therefore shown at `ART_SCALE` (`src/config/world.ts`). Every world sprite goes through `worldScale(sprite)` and every circular body through `fitCircleBody(sprite, radius)` (`src/systems/artScale.ts`); never hard-code a scale or pass world radii straight to `setCircle` on a scaled sprite.
+- `ART_SCALE` is 1 while the old art is in use. The Director flips it to 0.5 when the v2 art is switched on. Code written through the helpers works with both.
+- **All text lives in the UI scene** (unzoomed, 1280x720). World point to UI point is x4.
+
+### The square's layout
+
+`src/config/square.ts` holds the one layout. Legend (`src/systems/roomLayout.ts`):
 
 | Char | Meaning |
 | --- | --- |
-| `#` | Wall (blocks movement, Infrared and Ultraviolet) |
-| `.` | Floor |
-| `,` | Floor, decorative variant |
-| `o` | Prop (blocks movement, does not block radiation) |
-| `P` | Player start (floor) |
-| `C` | Chest (floor until the room is cleared; then a chest holding `RoomDef.reward`) |
-| `S` | Secret wall (looks like a cracked wall; only `RoomDef.secret` radiation breaks it) |
-| `H` | Health upgrade (floor with a pickup on it; put it behind an `S`) |
+| `#` | Building wall (blocks movement and rays) |
+| `.` `,` | Paving, worn paving |
+| `o` | Street furniture (blocks movement, not rays) |
+| `F` | Fountain (blocks movement, not rays) |
+| `e` | Street entry: open floor; enemies walk in from here |
+| `P` | Player start |
+| `S` | A cracked wall on the outer ring (secret) |
 
-The outer ring must be `#`. Exactly one `P` per room. A room with a `reward` needs exactly one `C`; a room with `S` tiles needs a `secret` and one `H` that is unreachable until an `S` breaks.
+Flying enemies ignore `o` and `F`. `C` and `H` from v1 are no longer used.
 
-### Flow between scenes
+### v2 art (owned by `src/art/v2/`)
 
-`Boot` -> `Title` -> `Game` (one room at a time, restarted per room) -> `Ending` -> `Title`. The `UI` scene runs on top of `Game` and `Ending` the whole time.
+Entry point: `bakeArtV2(scene)` in `src/art/v2/index.ts`. The game keeps using the old `bakeArt` until the Director switches over. `?gallery2` shows the v2 contact sheet.
 
-- Progress for the current playthrough (unlocked radiation, cleared rooms, Field Guide pages, secrets, bonus health) lives in the registry through `Progress` in `src/state.ts`.
-- The Game and Ending scenes never draw text. They emit events and the UI scene shows captions, item-get cards, the pause page, the report card and credits, then answers with `DIALOG_DONE` or `SCREEN_DONE` (see `src/events.ts`).
-- All player-facing words live in `src/config/text.ts`.
+`{style}` is each of `goldenAge`, `cyberpunk`, `retro`, `manga`, `plain`. Sizes are texture pixels.
 
-### Styles
-
-`StyleId`: `goldenAge`, `noir`, `manga`, `plain` (the ending), `finalPage` (boss, cycles the others).
-
-Sprites are drawn once as grids of palette indices and baked once per style palette.
-
-| Style | Palette direction |
-| --- | --- |
-| goldenAge | Four-colour print: saturated red, yellow, blue, with black ink outlines and off-white paper |
-| noir | Greys from near-black to white, one accent colour for radiation only |
-| manga | Pure black and white with a screentone grey |
-| plain | Soft, natural, low-saturation daylight colours; nothing looks like a monster |
-
-### Texture keys (owned by `src/art/`)
-
-`{style}` is one of the four palette styles.
-
-| Key | Frame size | Frames |
+| Key | Frame | Frames |
 | --- | --- | --- |
-| `tiles-{style}` | 16x16 | 0 floor, 1 floor variant, 2 wall, 3 prop, 4 cracked wall, 5 chest closed, 6 chest open |
-| `player-{style}` | 16x16 | 0-1 down, 2-3 up, 4-5 left, 6-7 right (two walk frames each) |
-| `machine-{style}` | 12x6 | 0: the EMW Machine pointing right, origin at its left end |
-| `swarmlet-{style}` | 8x8 | 0-1 |
-| `frostling-{style}` | 16x16 | 0-1 |
-| `shade-{style}` | 16x16 | 0-1 |
-| `ironclad-{style}` | 16x16 | 0-1 move, 2 wind-up |
-| `prism-{style}` | 32x32 | 0-1 |
-| `projectile-{style}` | 8x8 | 0 |
-| `heart` | 8x8 | 0 full |
-| `spark` | 4x4 | 0 white particle |
-| `icons` | 12x12 | 0 radio, 1 infrared, 2 ultraviolet, 3 gamma (for the HUD) |
+| `city-{style}` | 640x320 | One picture of the whole square: paving, buildings on the ring, furniture, fountain. Must match `SQUARE_LAYOUT` tile for tile |
+| `city-{style}-over` | 640x320 | Transparent layer drawn above characters: lamp heads, awnings, anything a person walks behind |
+| `crack-{style}` | 32x32 | 0 hairline crack (to overlay on a wall tile), 1 broken open |
+| `player-{style}` | 32x48 | Per direction (down, up, left, right): idle, walk A, walk B, dash. 16 frames |
+| `machine-{style}` | 24x12 | 0, pointing right, origin at its left end |
+| `rat-{style}` | 16x16 | 0-1 move |
+| `bat-{style}`, `zigbat-{style}` | 24x24 | 0-1 flap |
+| `slime-{style}`, `skitter-{style}` | 32x32 | 0-1 move |
+| `ghost-{style}`, `wraith-{style}` | 32x32 | 0-1 move, 2 wind-up |
+| `ironclad-{style}`, `snowman-{style}`, `acidSlime-{style}` | 32x32 | 0-1 move, 2 wind-up |
+| `golem-{style}` | 48x48 | 0-3 roll |
+| `prism-{style}` | 64x64 | 0-1 move, 2 wind-up |
+| `projectiles-{style}` | 16x16 | 0 thrown thing (ironclad), 1 snowball, 2 acid glob, 3 prism shard |
+| `hazards-{style}` | 32x32 | 0 ice patch, 1 acid pool |
+| `heart` | 16x16 | 0 |
+| `upgrade` | 16x16 | 0 health upgrade |
+| `spark` | 8x8 | 0 white particle |
+| `icons` | 24x24 | 0 blue, 1 red, 2 green, 3 white, 4 uv, 5 dash |
+| `era-icons` | 24x24 | 0 goldenAge, 1 cyberpunk, 2 retro, 3 manga (shown over the boss's head) |
 
-In the `plain` style the monster keys draw what they really are (pigeon, ice-cream vendor, man in a coat, cyclist, police car) and `machine-plain` is a pocket torch.
+Animations at 8 frames a second, looping: `player-{style}-walk-{down|up|left|right}` (idle, A, idle, B), `{enemy}-{style}-move`.
 
-Animations: `player-{style}-walk-{down|up|left|right}` and `{monster}-{style}-move`, 6 frames per second, looping.
-
-Entry point: `bakeArt(scene: Phaser.Scene): void` in `src/art/index.ts`, called once from the Boot scene.
+**Detail must fall era by era, in the drawing and not only the palette.** Golden has everything: window frames, signs, awnings, flowers, cobbles, shadows from the sun. Cyberpunk keeps the buildings but loses small details and lights them with neon at dusk. Retro is darker and duller with flat walls and few windows. Manga is black and white with sharp outlines and almost nothing inside them. `plain` is the real square in ordinary daylight with all the detail back, and in `plain` every enemy key draws what it really is (section 6) and the machine is a pocket torch. Enemies follow the same curve: bright and detailed in Golden, dull in Cyberpunk and Retro, outlines in Manga.
 
 ### Audio (owned by `src/audio/`)
 
-Everything is synthesised with the Web Audio API. No audio files.
+Synthesised at runtime; no files. The `audio` API is unchanged (`unlock`, `playMusic`, `stopMusic`, `sfx`, `setLoop`, `setVolume`). New ids for v2:
 
-Entry point: the `audio` object exported from `src/audio/index.ts`:
+- `MusicId` adds `cyberpunk` and `retro` (the old `noir` track becomes `retro`).
+- `SfxId` adds `blue`, `red` is a loop, `greenRelease`, `white`, `uv`, `dash`, `dashReady`, `wheel`, `wheelLocked`, `mode`, `checkpoint`, `surge`, `ice`, `acid`, `upgrade`, `bossTelegraph`, `eraSwap`.
+- `LoopId` adds `red` (the laser) and `greenCharge`.
 
-```ts
-audio.unlock(): void                 // call on the first key or mouse press
-audio.playMusic(id: MusicId): void   // cross-fades; calling with the current id does nothing
-audio.stopMusic(): void
-audio.sfx(id: SfxId): void
-audio.setLoop(id: LoopId, on: boolean): void
-audio.setVolume(music: number, sfx: number): void   // 0 to 1
-```
+### How the pieces talk
 
-- `MusicId`: `title`, `goldenAge`, `noir`, `manga`, `boss`, `ending`
-- `SfxId`: `radio`, `ultraviolet`, `gamma`, `hitWeak`, `hitNormal`, `hitResist`, `monsterDie`, `playerHurt`, `playerDie`, `roomClear`, `itemGet`, `chestOpen`, `secret`, `switch`, `denied`, `heart`, `bossPhase`, `uiSelect`
-- `LoopId`: `infrared`, `gammaCharge`
+- Cross-scene communication goes through `scene.game.events` with the names and payloads in `src/events.ts`. Gameplay code never draws text and never calls audio; it emits events.
+- Progress for a playthrough is in the registry through `Progress` (`src/state.ts`).
+- Words the player reads are in `src/config/text.ts`.
 
-Music direction: chiptune (square, triangle, noise). Golden Age is bright and heroic; Noir is slow with a walking bass; Manga is fast and driving; the boss mixes motifs from all three; the ending is the Golden Age melody played plainly and slowly on one voice.
+**Between the machine and the enemies** (so the two can be built separately):
 
-### Events
+| Provided by enemies (`Monster`) | Used by the machine |
+| --- | --- |
+| `def` (with `class`, `radius`), `x`, `y`, `active` | Targeting |
+| `takeDamage(ray, amount): boolean` | Applies `damageMultiplier`; false if it did nothing |
+| `knockback(fromX, fromY, speed, ms)`, `stun(ms)`, `slow(factor, ms)` | White's push, Green's slow |
+| `exposeToUv(): boolean` | UV: a stealth enemy is revealed and loses half its health (not more than once a second); others return false |
+| `blocksRays: boolean` | True for the Golem: Blue, Red and Green stop at it |
+| `flying: boolean` | Bats |
+| Projectiles in `world.projectiles`, each with `deflect(fromX, fromY, speed)` | White pushes them away |
 
-Cross-scene communication goes through `scene.game.events` using the names in `src/events.ts`.
+| Provided by the player (`Player`) | Used by enemies and hazards |
+| --- | --- |
+| `x`, `y`, `isDead` | Targeting |
+| `hurt(amount): boolean` | False while dashing or just hit |
+| `isDashing: boolean` | Contact is ignored while true |
+| `speedScale: number` | Ice sets it below 1 and restores it |
 
 ### File ownership
 
+Wave A:
+
 | Folder | Owner |
 | --- | --- |
-| `src/art/` | Art |
+| `src/art/v2/city/` | Art: environment |
+| `src/art/v2/` (everything else) | Art: characters |
 | `src/audio/` | Audio |
-| `src/systems/`, `src/entities/` | Gameplay |
-| `src/config/levels/`, `src/config/text.ts`, `docs/LEVELS.md` | Levels and narrative |
-| `src/scenes/Game.ts`, `src/scenes/Ending.ts` | Gameplay (flow) |
+| `src/systems/EMWMachine.ts`, `src/systems/Combat.ts`, `src/systems/rayEffects.ts`, `src/entities/Player.ts`, `src/config/rays.ts` | Weapons |
+| `src/entities/` (except `Player.ts`), `src/config/monsters.ts`, `src/systems/Navigation.ts`, `src/systems/WaveDirector.ts`, `src/config/levels/sandbox.ts` | Enemies |
+| `src/scenes/Game.ts` | Shared by Weapons and Enemies: small, marked insertions only; re-read before every edit |
+
+Wave B:
+
+| Folder | Owner |
+| --- | --- |
+| `src/config/levels/` (except sandbox), `src/config/text.ts`, `docs/LEVELS.md` | Eras and narrative |
+| `src/scenes/Game.ts`, `src/scenes/Ending.ts`, `src/systems/` (flow parts) | Flow |
 | `src/scenes/UI.ts`, `src/scenes/Title.ts`, `src/ui/` | Interface |
-| `src/main.ts`, `src/scenes/Boot.ts`, `src/types.ts`, `src/events.ts`, `src/state.ts`, `src/audioBridge.ts`, `src/config/world.ts` | Director |
-| `tests/`, `tools/` | QA |
+| `tests/`, `tools/`, `docs/TESTING.md` | QA |
+
+Always the Director's: `src/main.ts`, `src/scenes/Boot.ts`, `src/types.ts`, `src/events.ts`, `src/state.ts`, `src/settings.ts`, `src/audioBridge.ts`, `src/config/world.ts`, `src/config/square.ts`, `src/art/index.ts`, this file.
+
+### Dev helpers (dev server only)
+
+`?level=N` starts era N. `?sandbox` and `?sandbox&room=M` open the test level. `?nodamage` makes the player invulnerable. `?gallery` and `?gallery2` show the old and v2 art sheets. K kills everything alive and skips waits. `window.__game` is the Phaser game.

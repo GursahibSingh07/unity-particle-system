@@ -34,6 +34,11 @@ if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('gall
     const { Gallery } = await import('./art/Gallery');
     config.scene = [Gallery];
 }
+if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('gallery2')) {
+    // The v2 art, before it is switched on in the game
+    const { GalleryV2 } = await import('./art/v2/Gallery');
+    config.scene = [GalleryV2];
+}
 
 // Canvas text is drawn once, so the font has to be ready before any scene creates text
 await document.fonts.load('30px "Pixelify Sans"');

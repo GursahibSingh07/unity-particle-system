@@ -1,14 +1,13 @@
 import Phaser from 'phaser';
-import { RADIATIONS } from '../config/radiation';
-import { ENDING, ITEM_GET } from '../config/text';
-import type { RadiationId } from '../types';
+import { RAYS } from '../config/rays';
+import { ENDING, UPGRADES } from '../config/text';
+import type { UpgradeId } from '../types';
 import type { Modal, ModalHooks } from './Captions';
-import { burst, burstPoints, halftoneFade, panel, pixelNumber, rays } from './draw';
+import { burst, burstPoints, halftoneFade, panel, rays } from './draw';
+import { DASH_ICON, RAY_ICON, isRay } from './eras';
 import { GUIDE_ORDER, GuideCard } from './GuideCard';
 import { LABELS } from './labels';
-import { Depth, GREY, INK, PAPER, RED, SCREEN_HEIGHT, SCREEN_WIDTH, WHITE, YELLOW, makeText } from './theme';
-
-const ICON_FRAMES: Record<RadiationId, number> = { radio: 0, infrared: 1, ultraviolet: 2, gamma: 3 };
+import { Depth, GREY, INK, ORANGE, PAPER, RED, SCREEN_HEIGHT, SCREEN_WIDTH, WHITE, YELLOW, makeText } from './theme';
 
 /** Shared by every full-screen card: it cannot be dismissed until `unlock` has been called */
 abstract class Card implements Modal {
@@ -92,75 +91,99 @@ abstract class Card implements Modal {
     }
 }
 
-/** A new radiation, held up in a burst of its own colour */
-export class ItemGetModal extends Card {
-    constructor(scene: Phaser.Scene, id: RadiationId, hooks: ModalHooks) {
+const DASH_COLOR = ORANGE;
+
+/** Everything an era hands over, held up together: one burst, one name and one line for each */
+export class UpgradeModal extends Card {
+    constructor(scene: Phaser.Scene, ids: UpgradeId[], hooks: ModalHooks) {
         super(scene, hooks);
-        const def = RADIATIONS[id];
-        const words = ITEM_GET[id];
+        const words = UPGRADES as Partial<Record<string, { title: string; line: string }>>;
+        const colorOf = (id: UpgradeId) => (isRay(id) ? (RAYS[id]?.color ?? YELLOW) : DASH_COLOR);
+        const count = ids.length;
         const cx = SCREEN_WIDTH / 2;
-        const cy = 270;
-        this.dim(0.78);
+        this.dim(0.8);
 
         const spin = scene.add.graphics();
-        rays(spin, 0, 0, 900, 24, def?.color ?? YELLOW, 0.4);
-        const spinner = scene.add.container(cx, cy, [spin]);
+        rays(spin, 0, 0, 900, 24, count === 1 ? colorOf(ids[0]) : YELLOW, 0.35);
+        const spinner = scene.add.container(cx, 250, [spin]);
         this.tween({ targets: spinner, angle: 360, duration: 14000, repeat: -1 });
+        this.root.add(spinner);
 
-        const star = scene.add.graphics();
-        burst(star, burstPoints(8, 9, 190, 132, 16, 0.18, 3), INK, INK, 0);
-        burst(star, burstPoints(0, 0, 190, 132, 16, 0.18, 3), YELLOW, INK, 6);
-        burst(star, burstPoints(0, 0, 150, 108, 16, 0.18, 3), WHITE, INK, 0);
-        const starBox = scene.add.container(cx, cy, [star]).setScale(0.2);
-        this.tween({ targets: starBox, scale: 1, duration: 200, ease: 'Back.easeOut' });
+        // One column each; a single gift gets the whole card
+        const columnWidth = count === 1 ? 760 : Math.floor((SCREEN_WIDTH - 80 - (count - 1) * 24) / count);
+        const total = count * columnWidth + (count - 1) * 24;
+        const left = cx - total / 2;
+        const big = count === 1;
+        const starY = big ? 236 : 226;
+        const outer = big ? 176 : count === 2 ? 150 : 132;
+        const iconScale = big ? 9 : count === 2 ? 7 : 6;
+        const plateTop = big ? 452 : 410;
+        const plateHeight = big ? 180 : 214;
 
-        const icon = scene.add.image(cx, cy, 'icons', ICON_FRAMES[id] ?? 0).setScale(2);
-        this.tween({ targets: icon, scale: 12, duration: 240, ease: 'Back.easeOut', delay: 60 });
+        ids.forEach((id, index) => {
+            const color = colorOf(id);
+            const x = left + index * (columnWidth + 24) + columnWidth / 2;
+            const entry = words[id];
 
-        const plateWidth = 880;
-        const plateTop = 476;
-        const plate = scene.add.graphics();
-        panel(plate, cx - plateWidth / 2, plateTop, plateWidth, 164, PAPER, 5, 9);
-        plate.fillStyle(def?.color ?? YELLOW, 1).fillRect(cx - plateWidth / 2 + 5, plateTop + 5, plateWidth - 10, 12);
-        plate.fillStyle(INK, 1).fillRect(cx - plateWidth / 2 + 5, plateTop + 17, plateWidth - 10, 3);
+            const star = scene.add.graphics();
+            burst(star, burstPoints(8, 9, outer, outer * 0.7, 16, 0.18, 3 + index), INK, INK, 0);
+            burst(star, burstPoints(0, 0, outer, outer * 0.7, 16, 0.18, 3 + index), color, INK, 6);
+            burst(star, burstPoints(0, 0, outer * 0.78, outer * 0.56, 16, 0.18, 3 + index), WHITE, INK, 0);
+            const starBox = scene.add.container(x, starY, [star]).setScale(0.2);
+            this.tween({ targets: starBox, scale: 1, duration: 200, ease: 'Back.easeOut', delay: index * 90 });
+            this.root.add(starBox);
 
-        const title = makeText(scene, cx, plateTop + 66, words?.title ?? id.toUpperCase(), 68, {
-            bold: true,
-            color: def?.color ?? YELLOW,
-            stroke: INK,
-            strokeThickness: 12,
-            drop: 4,
-        }).setOrigin(0.5);
-        if (title.width > plateWidth - 40) {
-            title.setScale((plateWidth - 40) / title.width);
-        }
-        const line = makeText(scene, cx, plateTop + 128, words?.line ?? '', 25, {
-            wrap: plateWidth - 60,
-            align: 'center',
-        }).setOrigin(0.5);
-        if (line.height > 40) {
-            line.setFontSize(20);
-        }
+            // The double dash is the dash icon, twice
+            const frame = isRay(id) ? RAY_ICON[id] : DASH_ICON;
+            const offsets = id === 'doubleDash' ? [-iconScale * 5, iconScale * 5] : [0];
+            for (const offset of offsets) {
+                const icon = scene.add.image(x + offset, starY + (offset ? offset * 0.35 : 0), 'icons', frame).setScale(1);
+                this.tween({ targets: icon, scale: iconScale, duration: 240, ease: 'Back.easeOut', delay: 60 + index * 90 });
+                this.root.add(icon);
+            }
 
-        // Which key it is on, as a key cap: the one thing on this card that must not be misread
-        const keyCap = scene.add.graphics();
-        if (def) {
-            const cap = 64;
-            const capX = cx + plateWidth / 2 - 62;
-            const capY = plateTop + 66;
-            keyCap.fillStyle(INK, 1).fillRect(capX - cap / 2 + 5, capY - cap / 2 + 6, cap, cap);
-            keyCap.fillStyle(INK, 1).fillRect(capX - cap / 2, capY - cap / 2, cap, cap);
-            keyCap.fillStyle(PAPER, 1).fillRect(capX - cap / 2 + 5, capY - cap / 2 + 5, cap - 10, cap - 10);
-            pixelNumber(keyCap, String(def.key), capX, capY, 5, INK);
-        }
+            const plate = scene.add.graphics();
+            panel(plate, x - columnWidth / 2, plateTop, columnWidth, plateHeight, PAPER, 5, 8);
+            plate.fillStyle(color, 1).fillRect(x - columnWidth / 2 + 5, plateTop + 5, columnWidth - 10, 12);
+            plate.fillStyle(INK, 1).fillRect(x - columnWidth / 2 + 5, plateTop + 17, columnWidth - 10, 3);
+            const title = makeText(scene, x, plateTop + (big ? 68 : 62), entry?.title ?? String(id).toUpperCase(), big ? 68 : 46, {
+                bold: true,
+                color,
+                stroke: INK,
+                strokeThickness: big ? 12 : 9,
+                drop: big ? 4 : 3,
+            }).setOrigin(0.5);
+            if (title.width > columnWidth - 36) {
+                title.setScale((columnWidth - 36) / title.width);
+            }
+            const lineTop = plateTop + (big ? 112 : 104);
+            const room = plateTop + plateHeight - 14 - lineTop;
+            let line = makeText(scene, x, lineTop, entry?.line ?? '', big ? 26 : 23, { wrap: columnWidth - 44, align: 'center' }).setOrigin(0.5, 0);
+            for (const size of [21, 19, 17, 15]) {
+                if (line.height <= room) {
+                    break;
+                }
+                line.destroy();
+                line = makeText(scene, x, lineTop, entry?.line ?? '', size, { wrap: columnWidth - 44, align: 'center' }).setOrigin(0.5, 0);
+            }
+            this.root.add([plate, title, line]);
+        });
 
-        this.root.add([spinner, starBox, icon, plate, keyCap, title, line]);
+        // A corner flash, as on a cover: something new in this issue
+        const flashText = makeText(scene, 0, 0, LABELS.newGear, 40, { bold: true, color: RED, stroke: INK, strokeThickness: 8 }).setOrigin(0.5);
+        const flash = scene.add.graphics();
+        burst(flash, burstPoints(5, 6, 76, 52, 12, 0.25, 21), INK, INK, 0);
+        burst(flash, burstPoints(0, 0, 76, 52, 12, 0.25, 21), YELLOW, INK, 5);
+        const flashBox = scene.add.container(Math.max(110, left + 40), 92, [flash, flashText]).setAngle(-12).setScale(0.3);
+        this.tween({ targets: flashBox, scale: 1, duration: 180, ease: 'Back.easeOut', delay: 120 });
+        this.root.add(flashBox);
+
         this.later(1200, () => this.unlock());
     }
 }
 
 const SHEET_WIDTH = 920;
-const LABEL_WIDTH = 150;
+const LABEL_WIDTH = 200;
 const SHEET_TOP = 24;
 const SHEET_HEIGHT = SCREEN_HEIGHT - 48;
 const SHEET_COLOR = 0xf6f3e8;
@@ -216,7 +239,7 @@ export class ReportModal extends Card {
         const lines = ENDING.report.map((line) => String(line));
         const available = SHEET_HEIGHT - 70;
         // Try the comfortable size first, and step down until the form fits its sheet
-        for (const scale of [1, 0.92, 0.84, 0.76, 0.66, 0.56]) {
+        for (const scale of [1, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.56]) {
             for (const row of this.rows) {
                 row.destroy();
             }
@@ -281,7 +304,7 @@ export class ReportModal extends Card {
         }
         const bottom = top + Math.ceil(value.height) + size(3);
         g.fillStyle(last ? FORM_INK : 0xb9b5c4, 1).fillRect(0, bottom, width, last ? 3 : 2);
-        return bottom + size(11);
+        return bottom + size(7);
     }
 
     private buildStamp(x: number, y: number) {
@@ -332,12 +355,14 @@ export class ReportModal extends Card {
     }
 }
 
-const TRUTH_CARD_WIDTH = 228;
-const TRUTH_CARD_HEIGHT = 470;
-const TRUTH_GAP = 14;
-const TRUTH_INTERVAL = 1100;
+const TRUTH_COLUMNS = 6;
+const TRUTH_GAP = 12;
+const TRUTH_TOP = 104;
+/** Pages are corrected a few at a time, or twelve of them would take a minute */
+const TRUTH_GROUP = 3;
+const TRUTH_INTERVAL = 950;
 
-/** Every Field Guide page, one by one turned into what it really was */
+/** Every Field Guide page, group by group turned into what it really was */
 export class GuideTruthModal extends Card {
     private cards: GuideCard[] = [];
     private revealed = 0;
@@ -349,26 +374,35 @@ export class GuideTruthModal extends Card {
         halftoneFade(back, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0x3a3546, 16, 5, 'up');
         this.root.add(back);
 
-        const heading = makeText(scene, SCREEN_WIDTH / 2, 62, ENDING.guideHeading, 32, {
+        const heading = makeText(scene, SCREEN_WIDTH / 2, 54, ENDING.guideHeading, 32, {
             bold: true,
             color: PAPER,
             wrap: SCREEN_WIDTH - 120,
             align: 'center',
         }).setOrigin(0.5);
-        if (heading.height > 84) {
-            heading.setFontSize(24);
+        if (heading.height > 70) {
+            heading.setFontSize(22);
         }
         this.root.add(heading);
 
-        const total = GUIDE_ORDER.length * TRUTH_CARD_WIDTH + (GUIDE_ORDER.length - 1) * TRUTH_GAP;
-        const left = Math.round((SCREEN_WIDTH - total) / 2);
+        const columns = Math.min(TRUTH_COLUMNS, GUIDE_ORDER.length);
+        const rows = Math.ceil(GUIDE_ORDER.length / columns);
+        const width = Math.floor((SCREEN_WIDTH - 60 - (columns - 1) * TRUTH_GAP) / columns);
+        const height = Math.floor((SCREEN_HEIGHT - TRUTH_TOP - 56 - (rows - 1) * TRUTH_GAP) / rows);
+        const left = Math.round((SCREEN_WIDTH - columns * width - (columns - 1) * TRUTH_GAP) / 2);
         GUIDE_ORDER.forEach((id, index) => {
-            const card = new GuideCard(scene, left + index * (TRUTH_CARD_WIDTH + TRUTH_GAP), 130, id, {
-                width: TRUTH_CARD_WIDTH,
-                height: TRUTH_CARD_HEIGHT,
+            const x = left + (index % columns) * (width + TRUTH_GAP);
+            const y = TRUTH_TOP + Math.floor(index / columns) * (height + TRUTH_GAP);
+            const card = new GuideCard(scene, x, y, id, {
+                width,
+                height,
                 style: 'goldenAge',
                 unlocked: true,
                 truthSlot: true,
+                pictureHeight: 86,
+                titleSize: 20,
+                noteSizes: [15, 14, 13, 12],
+                truthOverNote: true,
             });
             this.cards.push(card);
             this.root.add(card.container);
@@ -389,12 +423,12 @@ export class GuideTruthModal extends Card {
     }
 
     private reveal() {
-        const card = this.cards[this.revealed];
-        if (!card) {
+        if (this.revealed >= this.cards.length) {
             return;
         }
-        this.revealed++;
-        card.revealTruth(true);
+        const group = this.cards.slice(this.revealed, this.revealed + TRUTH_GROUP);
+        this.revealed += group.length;
+        group.forEach((card, index) => this.later(index * 90, () => card.revealTruth(true)));
         this.hooks.select();
         if (this.revealed >= this.cards.length) {
             this.later(1400, () => this.unlock());

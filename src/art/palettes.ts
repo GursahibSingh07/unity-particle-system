@@ -187,7 +187,7 @@ const plain: Palette = {
     7: '#b08672',
 };
 
-export const PALETTES: Record<ArtStyle, Palette> = { goldenAge, noir, manga, plain };
+export const PALETTES: Record<ArtStyle, Palette> = { goldenAge, cyberpunk: noir, retro: noir, manga, plain };
 
 /** For the HUD textures that look the same in every style */
 export const SHARED_PALETTE: Palette = {

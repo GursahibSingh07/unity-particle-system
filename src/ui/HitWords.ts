@@ -9,10 +9,13 @@ type Kind = 'weak' | 'normal' | 'resist';
 // A beam reports a hit many times a second. These keep the words readable and the room visible.
 const MIN_GAP: Record<Kind, number> = { weak: 260, normal: 420, resist: 380 };
 const MAX_ALIVE: Record<Kind, number> = { weak: 3, normal: 2, resist: 2 };
+// The word lists belong to the writers: these are the names each kind has gone by
+const WORD_KEYS: Record<Kind, string[]> = { weak: ['weak', 'strong'], normal: ['normal', 'neutral'], resist: ['resist', 'feeble'] };
 
 /**
  * Comic sound words at the point of a hit. This is the only way the game tells the player
- * about weaknesses, so the three kinds differ in size, colour, shape and motion all at once.
+ * about weaknesses, so the three kinds differ in size, colour, shape and motion all at once:
+ * a strong ray (above 1) is a big burst, a neutral one (1) small, a poor one (below 1) tiny and grey.
  */
 export class HitWords {
     private lastAt: Record<Kind, number> = { weak: -9999, normal: -9999, resist: -9999 };
@@ -28,7 +31,8 @@ export class HitWords {
         if (now - this.lastAt[kind] < MIN_GAP[kind] || this.alive[kind] >= MAX_ALIVE[kind]) {
             return;
         }
-        const words = ONOMATOPOEIA[kind];
+        const table = ONOMATOPOEIA as Record<string, string[] | undefined>;
+        const words = WORD_KEYS[kind].map((key) => table[key]).find((list) => Array.isArray(list));
         if (!words || words.length === 0) {
             return;
         }
@@ -48,7 +52,7 @@ export class HitWords {
             this.alive[kind]--;
         };
         if (kind === 'weak') {
-            this.weak(x, y, word, done);
+            this.weak(x, y, word, done, multiplier >= 2 ? 1.15 : 0.95);
         } else if (kind === 'normal') {
             this.normal(x, y, word, done);
         } else {
@@ -56,7 +60,7 @@ export class HitWords {
         }
     }
 
-    private weak(x: number, y: number, word: string, done: () => void) {
+    private weak(x: number, y: number, word: string, done: () => void, size: number) {
         const text = makeText(this.scene, 0, 0, word, 46, {
             bold: true,
             color: RED,
@@ -78,10 +82,10 @@ export class HitWords {
         this.scene.tweens.chain({
             targets: container,
             tweens: [
-                { scale: 1.18, duration: 90, ease: 'Quad.easeOut' },
-                { scale: 1, duration: 70 },
-                { scale: 1.04, duration: 420 },
-                { alpha: 0, scale: 1.25, duration: 130 },
+                { scale: 1.18 * size, duration: 90, ease: 'Quad.easeOut' },
+                { scale: size, duration: 70 },
+                { scale: 1.04 * size, duration: 420 },
+                { alpha: 0, scale: 1.25 * size, duration: 130 },
             ],
             onComplete: () => {
                 container.destroy();
@@ -117,7 +121,7 @@ export class HitWords {
 
     private resist(x: number, y: number, word: string, done: () => void) {
         // Small, grey, and it drops: the shot bounced off
-        const text = makeText(this.scene, this.clampX(x, 30), this.clampY(y + 28, 16), word, 20, {
+        const text = makeText(this.scene, this.clampX(x, 30), this.clampY(y + 28, 16), word, 17, {
             color: 0xb9b6c6,
             stroke: 0x2a2638,
             strokeThickness: 4,

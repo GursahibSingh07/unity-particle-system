@@ -36,8 +36,7 @@ export class Ironclad extends Monster {
         const sees = this.seesPlayer();
         if (sees && now >= this.nextThrowAt) {
             this.windingUntil = now + IRONCLAD.windup;
-            this.stop();
-            this.setFrame(WINDUP_FRAME);
+            this.showFrame(WINDUP_FRAME);
             closingRing(this.scene, this.x, this.y, this.def.radius + 5, 0xffffff, IRONCLAD.windup);
             this.scene.game.events.emit(Events.MONSTER_WINDUP, this.def.id, this.x, this.y);
             return;

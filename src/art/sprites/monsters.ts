@@ -51,7 +51,7 @@ const PIGEON_PECK: Grid = [
 ];
 
 export const SWARMLET: SheetDef = {
-    key: 'swarmlet',
+    key: 'rat',
     width: 8,
     height: 8,
     frames: [SWARMLET_UP, SWARMLET_DOWN],
@@ -104,7 +104,7 @@ const VENDOR_STEP = withRows(VENDOR, {
 });
 
 export const FROSTLING_SHEET: SheetDef = {
-    key: 'frostling',
+    key: 'slime',
     width: 16,
     height: 16,
     frames: [FROSTLING, squash(FROSTLING, 8)],
@@ -163,7 +163,7 @@ const COAT_MAN_STEP = withRows(COAT_MAN, {
 });
 
 export const SHADE_SHEET: SheetDef = {
-    key: 'shade',
+    key: 'ghost',
     width: 16,
     height: 16,
     frames: [SHADE, SHADE_DRIFT],
@@ -357,4 +357,20 @@ export const PROJECTILE: SheetDef = {
     styles: { plain: [BOTTLE] },
 };
 
-export const MONSTER_SHEETS = [SWARMLET, FROSTLING_SHEET, SHADE_SHEET, IRONCLAD_SHEET, PRISM_SHEET];
+// PLACEHOLDERS: the new enemies borrow existing drawings until the v2 art lands
+const borrow = (sheet: SheetDef, key: string): SheetDef => ({ ...sheet, key });
+
+export const MONSTER_SHEETS = [
+    SWARMLET,
+    FROSTLING_SHEET,
+    SHADE_SHEET,
+    IRONCLAD_SHEET,
+    PRISM_SHEET,
+    borrow(SWARMLET, 'bat'),
+    borrow(SWARMLET, 'zigbat'),
+    borrow(IRONCLAD_SHEET, 'golem'),
+    borrow(FROSTLING_SHEET, 'skitter'),
+    borrow(SHADE_SHEET, 'wraith'),
+    borrow(FROSTLING_SHEET, 'snowman'),
+    borrow(FROSTLING_SHEET, 'acidSlime'),
+];
