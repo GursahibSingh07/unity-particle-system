@@ -68,7 +68,7 @@ const CLASSES: Record<MonsterId, EnemyClass> = {
     prism: 'boss',
 };
 
-/** Section 2: the order Golden's clock brings its enemies in (ideas.md v2.1: Golden is timed too) */
+/** Section 2: the order Golden's clock brings its enemies in (CHANGELOG v2.1: Golden is timed too) */
 const GOLDEN_ORDER: MonsterId[][] = [['rat'], ['slime', 'bat'], ['ironclad'], ['golem']];
 
 /** Section 2: the era each class first appears in (index into LEVELS), and the order within it */

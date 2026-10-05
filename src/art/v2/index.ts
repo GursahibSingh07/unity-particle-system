@@ -8,7 +8,7 @@ import { PLAYER_FACINGS, PLAYER_FRAMES_PER_FACING } from './sprites/hero';
 
 // The v2 art: twice the resolution of v1 (2 texture pixels per world unit), drawn at boot
 // from the grids in ./sprites and the palettes in ./palettes.ts. Texture keys, frame sizes
-// and frame orders are listed in docs/DESIGN.md section 9.
+// and frame orders are listed in src/art/v2/sheets.ts.
 //
 // v2 uses the same key names as v1, so only one of bakeArt and bakeArtV2 should run in a game.
 
@@ -89,7 +89,7 @@ function addLoop(scene: Phaser.Scene, done: Set<string>, key: string, texture: s
     done.add(name);
 }
 
-/** Creates every v2 texture and animation listed in docs/DESIGN.md section 9. Safe to call again. */
+/** Creates every v2 texture and animation listed in src/art/v2/sheets.ts. Safe to call again. */
 export function bakeArtV2(scene: Phaser.Scene): void {
     let done = baked.get(scene.game);
     if (!done) {

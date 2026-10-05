@@ -5,7 +5,6 @@ import { squareWithCrack } from './crack';
 // that pushes everything away and sends thrown things back. Snowmen ice the floor, acid slimes
 // pool it. White is 1.5x against throwers and swarm and 0.25x against everything else, so there
 // is no armour, speed or stealth here at all: only throwers, and swarm to be pushed about.
-// The arc and the arithmetic behind these numbers are in docs/LEVELS.md.
 export const manga: LevelDef = {
     name: 'Manga Era',
     style: 'manga',

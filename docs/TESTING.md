@@ -90,7 +90,7 @@ Builds the game into a temporary folder (the repository's `dist/` is not touched
 
 1. The cover is drawn, there is one canvas, and nothing is logged to the console.
 2. `window.__game` is undefined.
-3. `?level=3`, `?sandbox&room=5`, `?gallery` and `?gallery2` all show the cover.
+3. `?level=3`, `?sandbox&room=5`, `?gallery2` all show the cover.
 4. A key press starts era 1. K does not skip the title card and does not kill a wave. `?nodamage` does not make the player invincible.
 
 The build has no `window.__game`, so here the test finds the Phaser game as it is constructed. Nothing in the game is changed for it.
@@ -132,7 +132,7 @@ These work only in the dev server (`npm run dev`), never in the built game. `npm
 | `?level=N` | Start era N (1 to 5) with everything the earlier eras hand over |
 | `?sandbox`, `?sandbox&room=M` | The test level: every ray, every mode, both dashes. Rooms 1 to 11 are the enemies class by class and the Prism; 12 is a 30-second timed room with a checkpoint every 10; 13 has a secret that only Red breaks. |
 | `?nodamage` | Nothing hurts the player. Combine with the others, for example `?level=3&nodamage`. |
-| `?gallery`, `?gallery2` | The old and the v2 art sheets |
+| `?gallery2` | The old and the v2 art sheets |
 | K | Kills everything alive and ends a wait for a caption or card. In a timed era it also winds the clock on by one checkpoint interval. In the ending it takes the torch away, then skips each caption and card. |
 | `window.__game` | The Phaser game. `__game.scene.getScene('Game').snapshot()` says where the era stands. |
 
@@ -142,6 +142,45 @@ Demo mode is not a dev helper: it is in the settings of the built game too, off 
 
 `.github/workflows/ci.yml` runs `npm ci` and `npm run check` on every push and pull request, on Node 24. It does not deploy and uses no secrets. The smoke tests need a browser and are not run in CI; run them locally.
 
+## Uploading to itch.io
+
+**Build, zip the contents of `dist/`, and upload the zip to itch.io as an HTML game.** The project is already set up for this: `vite.config.ts` uses relative paths (`base: './'`), so the build works from itch.io's subfolder.
+
+1. **Build it.** In a new terminal in the repo:
+   ```
+   npm run check
+   npm run build
+   ```
+   The game lands in `dist/`. If `npm` isn't found, open a fresh terminal so Node is on PATH.
+
+2. **Zip the contents of `dist/`, not the folder itself.** `index.html` must be at the top level of the zip. In PowerShell:
+   ```
+   Compress-Archive -Path dist\* -DestinationPath light-handler.zip -Force
+   ```
+
+3. **Create the project on itch.io.** Dashboard → Create new project, then:
+   - **Kind of project:** HTML.
+   - **Uploads:** upload `light-handler.zip` and tick "This file will be played in the browser".
+   - **Embed options:** set the viewport to 1280 × 720 and enable the fullscreen button. The game scales to fit, so a smaller frame also works.
+   - **Visibility:** Public (the jam rules require a public build). You can keep it Draft while you test, then switch.
+
+4. **Fill in the page for the rules.**
+   - **Credits:** list the three fonts with source links and licences, same as `CREDITS.md`.
+   - **AI disclosure:** state the AI tools used, same as `CREDITS.md`.
+
+5. **Test from the itch.io page itself**, in a private window:
+   - The game loads and starts on a key press.
+   - Keys work after clicking into the frame.
+   - Space dashes without scrolling the page.
+   - Sound starts after the first input.
+   - Settings survive a reload.
+
+None of step 5 can be checked by the automated tests: it can only be tested on the real page.
+
+Before uploading, commit and push everything, and don't commit after the freeze. The full pre-submission checklist follows. If the jam has its own submission page on itch.io, you also need to submit the project to the jam from there.
+
+The text for the itch.io page itself (description, themes, credits, AI disclosure) is in `submission.txt` in the repository root.
+
 ## Before submitting
 
 From `docs/rules.md`. Tick every line at the code freeze.
@@ -150,7 +189,7 @@ Build and stability:
 
 - [ ] `npm run check` passes on a clean checkout (`npm ci` first).
 - [ ] `npm run smoke -- --strict` passes.
-- [ ] `npm run smoke:build` passes: the built game renders, starts, and has no dev helpers (K, `?level`, `?sandbox`, `?nodamage`, `?gallery`, `window.__game`).
+- [ ] `npm run smoke:build` passes: the built game renders, starts, and has no dev helpers (K, `?level`, `?sandbox`, `?nodamage`, `window.__game`).
 - [ ] `npm run smoke:long` passes, and its frame times show no spike in the surge.
 - [ ] Demo mode is off by default, and a first visit to the page starts a normal game on any key.
 - [ ] A person has played the built game (`npm run build`, then `npm run preview`) from the cover to the credits without a stuck state or a console error.

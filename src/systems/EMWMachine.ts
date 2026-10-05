@@ -26,7 +26,7 @@ export interface SecretWalls {
 }
 
 /**
- * What the machine needs from an enemy (docs/DESIGN.md section 9). Everything beyond the basics
+ * What the machine needs from an enemy (src/art/v2/sheets.ts). Everything beyond the basics
  * is optional, so an enemy that has not grown a method yet is simply not affected by it.
  */
 export interface RayTarget {

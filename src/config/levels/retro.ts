@@ -5,7 +5,6 @@ import { squareWithCrack } from './crack';
 // machine is on overdrive and the wheel is locked and turns by itself (ERA_RULES.retro), so the
 // player fights with whatever colour comes up. The UV lens (F) is the one thing he chooses, and
 // stealth is why: the ghost from the tenth second, the wraith after the first checkpoint.
-// The arc and the arithmetic behind these numbers are in docs/LEVELS.md.
 export const retro: LevelDef = {
     name: 'Retro Era',
     style: 'retro',

@@ -20,7 +20,7 @@ const ALLOWANCE = {
 };
 /** What section 2 says a timed era takes: its clock plus cards and captions */
 const TIMED_ERA_BUDGET = 2.25;
-/** The title card, the captions and the item card in front of a timed era's clock (docs/LEVELS.md) */
+/** The title card, the captions and the item card in front of a timed era's clock (docs/DESIGN.md section 2) */
 const CARDS_PER_TIMED_ERA = 15 / 60;
 
 const timed = ERA_CASES.filter(({ level }) => level.rooms[0].continuous).map(({ label, level }) => ({
@@ -35,7 +35,7 @@ const turns = ((LEVELS.length - 1) * (FLOW.nextEraDelay + 2 * FLOW.fade)) / 6000
 const clean = fixed + clockMinutes + timed.length * CARDS_PER_TIMED_ERA + turns;
 /**
  * One death in each timed era. A death costs the time back to the last checkpoint: half an
- * interval on average, a whole one at worst (docs/LEVELS.md).
+ * interval on average, a whole one at worst (docs/DESIGN.md section 2).
  */
 const withDeaths = clean + timed.reduce((sum, { continuous }) => sum + checkpointSeconds(continuous) / 2, 0) / 60;
 

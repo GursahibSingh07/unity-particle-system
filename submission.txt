@@ -1,0 +1,263 @@
+LIGHT HANDLER
+"He sees what no one else can!"
+
+TGC GameJam 2026 submission
+A top-down action game for the browser. One complete playthrough takes about 12 to 14 minutes.
+
+
+====================================================================
+TEAM
+====================================================================
+
+Gursahib Singh
+Abhishek Bhadiyadra
+Shardul Kholam
+Laveena Jain
+Harshil Soni
+
+
+====================================================================
+LINKS
+====================================================================
+
+Source code (public, MIT license):
+https://github.com/GursahibSingh07/unity-particle-system
+
+Play in the browser: this itch.io page (HTML5 build).
+[TODO before publishing: paste the itch.io page URL here if this text is reused elsewhere.]
+
+
+====================================================================
+THE GAME IN SHORT
+====================================================================
+
+You are the Light Handler. Monsters have overrun the city square and only you
+can see them. Your weapon is the EMW Machine, which fires different kinds of
+light. Turn its colour wheel to match the ray to the enemy, dash through
+danger, and hold the square through five eras.
+
+The square is the same place in every era, but each era it is drawn with
+less: fewer details, fewer colours. Each era also changes the rules of your
+machine, so the same square and the same hands have to be played a different
+way every time.
+
+Five eras:
+
+1. Golden Era     Bright sunshine, every detail. The full colour wheel:
+                  Blue, Red and Green. Two minutes on the clock.
+2. Cyberpunk Era  Dusk and neon. The Blue ray is taken away. You gain a dash.
+3. Retro Era      Dark and dull. The machine is in overdrive and the wheel
+                  locks and turns by itself. You gain a second dash and the
+                  UV lens, which reveals enemies that hide.
+4. Manga Era      Black and white. Only white light is left: a ring that
+                  pushes enemies back and sends thrown things back at them.
+5. Boss Era       The Prism. Every few attacks it switches the whole square
+                  to another era, and your machine obeys that era's rules
+                  until the next switch.
+
+Then the ending.
+
+
+====================================================================
+CONTROLS
+====================================================================
+
+W A S D             Move
+Mouse               Aim
+Left mouse button   Fire (hold for the red laser; hold and release for
+                    the green blob)
+Q / E               Turn the colour wheel
+F                   Switch mode: colour wheel, UV lens, white light
+Space               Dash
+Esc                 Pause (opens the comic book: eras, Field Guide,
+                    the machine, settings)
+
+The five rays:
+
+Blue    A cone in front. Strong against swarms.
+Red     A laser. Strongest up close. Strong against armour.
+Green   A charged blob that slows what it hits and leaves a slowing pool.
+        Strong against fast enemies.
+White   A ring all round you. Pushes enemies away and turns thrown things
+        round. Strong against swarms and throwers.
+UV      A cone that reveals hidden enemies and halves their health.
+
+The game never states these strengths during normal play. You learn them
+from the comic sound words that pop up on a hit: a big burst for a strong
+ray, a tiny grey word for a weak one.
+
+
+====================================================================
+THE THREE THEMES: LIGHT, COMIC, TWIST
+====================================================================
+
+LIGHT
+Light is the weapon, and the whole combat system. The EMW Machine fires five
+kinds of light (blue, red, green, white and ultraviolet), each with its own
+shape and its own use, and each era changes which light you are allowed and
+how it behaves. Light is also what the ending is about (see TWIST).
+
+COMIC
+The game is a comic book. The title screen is a comic cover. Each era is a
+"page" drawn in a different comic style: a bright golden-age print, a neon
+cyberpunk page, a dull retro page, and a black-and-white manga page. Hits
+land with comic sound words. The pause screen is an open comic book you leaf
+through with a page-turn animation, where each era you clear is "inked" as a
+panel. The style of each page is not only a look: it changes how the weapon
+works.
+
+TWIST  (spoilers for the ending)
+There were never any monsters. The Light Handler has schizophrenia, and it
+has been getting worse, which is why the world loses detail and colour from
+era to era. In the ending the detail comes back in plain daylight: the EMW
+Machine is a pocket torch, the "monsters" were ordinary people and animals
+in the square (pigeons, an ice-cream vendor, a cyclist, a jogger, a man in a
+dark coat), and the boss was a police car. He is arrested for causing mild
+annoyance to the public.
+
+The twist changes the meaning of what came before. Every note in the Field
+Guide is written so that it is literally true of the real thing as well, and
+after the ending the Field Guide shows what each enemy really was. The
+ending is played gently: the joke is how small the charge is, not his
+illness.
+
+
+====================================================================
+SECRETS
+====================================================================
+
+There are four secrets, one in each of the first four eras. Each is a
+hairline crack in a building wall. Only one kind of light breaks it, and it
+must be a ray that era allows. Breaking it drops a health upgrade worth two
+extra health blocks, which you keep for the rest of the run.
+
+Golden Era     North side, in the shop front left of the town hall.
+               Break it with Blue.
+Cyberpunk Era  West wall, in the bookshop, low down near the bottom-left
+               corner. Break it with Green.
+Retro Era      North side, in the shop front right of the town hall.
+               Break it with UV (press F for the UV lens).
+Manga Era      East wall, in the pharmacy, low down near the bottom-right
+               corner. Break it with White (stand next to the wall).
+
+Stand close and aim at the crack. The wrong ray only makes a dull spark.
+Found secrets are marked on the Eras page of the pause book.
+
+The game also has a hidden mercy rule: after two deaths at the same
+checkpoint, a heart is waiting near the start. It is never announced.
+
+
+====================================================================
+DEMO MODE AND GOD MODE (FOR JUDGES)
+====================================================================
+
+Both are in Settings. Open Settings with S on the cover, or with Esc during
+play (last pages of the pause book). Both are off by default and are saved
+in the browser.
+
+DEMO MODE
+Unlocks every era.
+- On the cover, press 1 to 5 (or click an era) to start from that era, with
+  the upgrades of the earlier eras already owned.
+- During play, open the pause book and press 1 to 5 on the Eras page to jump
+  to that era.
+- The Field Guide also shows which rays each enemy is weak to, and the
+  machine's page shows which enemies each ray is strong against. Normal play
+  hides both.
+
+GOD MODE
+Nothing can hurt you. It can be switched on or off in the middle of an era.
+Use it to see every era and the ending without risk.
+
+Suggested for judging: play the first era normally to feel the intended
+difficulty, then switch on God mode or Demo mode if you want to see the rest
+quickly.
+
+
+====================================================================
+LENGTH
+====================================================================
+
+A complete loop, from the cover to the ending, is designed for 10 to 15
+minutes: four timed eras of two minutes each, a boss fight of about two
+minutes, and a one-minute ending, plus the cards between them. Dying
+restarts from the last 45-second checkpoint, not the whole era, so the
+length does not depend much on skill.
+
+
+====================================================================
+HOW IT WAS MADE
+====================================================================
+
+- Engine: Phaser 4 (JavaScript game framework), built with Vite and written
+  in TypeScript. Runs in the browser as HTML5 / WebGL.
+- Fresh codebase: all game code was written during the jam, starting from an
+  empty Vite and Phaser project. No game templates, starter kits or
+  pre-existing game code were used.
+- Art: every sprite and background is pixel art defined in the game's own
+  source code and drawn when the game starts. There are no image files.
+- Music and sound: synthesised while the game runs by the game's own code,
+  using the browser's Web Audio API. There are no audio files.
+- The repository includes unit tests and an automated browser playthrough.
+
+
+====================================================================
+THIRD-PARTY ASSETS AND LICENSES
+====================================================================
+
+No paid assets are used. The only third-party assets are three open fonts:
+
+Pixelify Sans, by Stefie Justprince
+  Used for: in-game text (HUD, captions, cover)
+  Source: https://fonts.google.com/specimen/Pixelify+Sans
+  License: SIL Open Font License 1.1
+
+Bangers, by Vernon Adams
+  Used for: headings in the pause comic book
+  Source: https://fonts.google.com/specimen/Bangers
+  License: SIL Open Font License 1.1
+
+Comic Neue, by Craig Rozynski
+  Used for: body text in the pause comic book
+  Source: https://comicneue.com/
+  License: SIL Open Font License 1.1
+
+Libraries and tools:
+
+Phaser 4      Game framework     MIT            https://phaser.io/
+Vite          Build tool         MIT            https://vite.dev/
+TypeScript    Language           Apache-2.0     https://www.typescriptlang.org/
+Vitest        Tests              MIT            https://vitest.dev/
+
+The same list is in CREDITS.md in the repository root.
+
+
+====================================================================
+AI TOOLS DISCLOSURE
+====================================================================
+
+AI tools were used and are disclosed here as the jam rules require.
+
+- Claude (Anthropic), through Claude Code, was used to write game code, to
+  write the source code that defines the pixel art and synthesises the music
+  and sound, and to draft planning and design documents.
+- No image, audio or 3D generator was used. There are no AI-generated image
+  or audio files in the game.
+- The game concept, the three-theme design, the story and its twist, the
+  eras, the weapon and enemy design, and every balance and design change
+  (recorded as versions in docs/CHANGELOG.md in the repository) came from the
+  team.
+
+
+====================================================================
+RULES CHECKLIST
+====================================================================
+
+Fresh codebase built within the jam ................. yes
+Public GitHub repository with a license ............. yes (MIT)
+Only free / open / self-made assets, none paid ...... yes
+Third-party assets listed with sources and licenses . yes (above, and CREDITS.md)
+AI tools disclosed .................................. yes (above, and CREDITS.md)
+Browser-playable HTML5 build on itch.io ............. this page
+Complete, stable loop of 10 to 15 minutes ........... yes
+All three themes (Comic, Twist, Light) .............. yes (above)

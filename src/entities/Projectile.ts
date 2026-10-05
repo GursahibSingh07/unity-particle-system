@@ -8,7 +8,7 @@ import type { Player } from './Player';
 
 export type ProjectileKind = 'lump' | 'snowball' | 'acid' | 'shard';
 
-/** Frame of `projectiles-{style}` for each kind (docs/DESIGN.md section 9) */
+/** Frame of `projectiles-{style}` for each kind (src/art/v2/sheets.ts) */
 const FRAMES: Record<ProjectileKind, number> = { lump: 0, snowball: 1, acid: 2, shard: 3 };
 /** Until the v2 sheet exists every kind is the one old orb, told apart by colour */
 const STAND_IN_TINT: Record<ProjectileKind, number | null> = {

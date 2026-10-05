@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { bakeArt } from '../art';
 import { bakeArtV2 } from '../art/v2';
 import type { GameData } from './Game';
 
@@ -9,9 +8,6 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
-        // The v1 sheets are still baked for the few textures v2 does not replace (the old room
-        // tiles); v2 then takes over every key the two share
-        bakeArt(this);
         bakeArtV2(this);
 
         if (import.meta.env.DEV) {

@@ -3,7 +3,7 @@ import { SQUARE_LAYOUT } from '../square';
 
 // Era 5, "The Final Page". The square, one wave, one Prism. It starts with everything
 // (ERA_RULES.finalPage); every third attack it switches the era, and the machine obeys that
-// era's rule until the next switch. No grants and no secret. Notes are in docs/LEVELS.md.
+// era's rule until the next switch. No grants and no secret.
 export const boss: LevelDef = {
     name: 'Boss Era',
     style: 'finalPage',

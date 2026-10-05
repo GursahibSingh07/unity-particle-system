@@ -6,7 +6,7 @@ import type { Player } from './Player';
 
 export type HazardKind = 'ice' | 'acid';
 
-/** Frame of `hazards-{style}` for each kind (docs/DESIGN.md section 9) */
+/** Frame of `hazards-{style}` for each kind (src/art/v2/sheets.ts) */
 const FRAMES: Record<HazardKind, number> = { ice: 0, acid: 1 };
 /** Above the floor, below everything that stands on it */
 const HAZARD_DEPTH = 1;

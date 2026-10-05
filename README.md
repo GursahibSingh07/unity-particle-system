@@ -19,11 +19,11 @@ All art is pixel art defined in code and all music and sound is synthesised at r
 
 ## Documents
 
-- [Design bible](docs/DESIGN.md) - the current design and the art, audio and data contracts
-- [The team's design notes](docs/ideas.md) and the [v2 build plan](docs/planv2.md)
-- [Eras and pacing](docs/LEVELS.md)
-- [Testing and the pre-submission checklist](docs/TESTING.md)
-- [First plan](docs/GAME_PLAN.md) and [team plan](docs/TEAM_PLAN.md) (v1, kept for history)
+- [Design](docs/DESIGN.md) - the game as it is now: eras, rays, enemies, secrets, how it is built
+- [Changelog](docs/CHANGELOG.md) - the team's design notes, version by version
+- [Original proposal](docs/proposal.pdf)
+- [itch.io page text](submission.txt)
+- [Testing, uploading and the pre-submission checklist](docs/TESTING.md)
 - [Jam rules](docs/rules.md)
 - [Credits and AI disclosure](CREDITS.md)
 
@@ -57,6 +57,7 @@ src/entities/       Player and monsters
 src/systems/        The machine and its rays, spawning, timed eras, pathfinding, layout parsing
 src/config/         Every tunable number, plus level data
 src/art/            Pixel art, defined in code and drawn at startup
+src/ui/             HUD, colour wheel, captions, cards, the pause book
 src/audio/          Music and sound, synthesised at runtime
 ```
 

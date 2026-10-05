@@ -4,7 +4,6 @@ import { squareWithCrack } from './crack';
 // Era 2, "Neon Dusk". 120 seconds on the clock. Blue is gone (ERA_RULES.cyberpunk), so packs are
 // now a job for the Green blob, and the new dash is the way out of a corner. The speed class
 // arrives: zig-zag bats from the first second, the skitter after the first checkpoint.
-// The arc and the arithmetic behind these numbers are in docs/LEVELS.md.
 export const cyberpunk: LevelDef = {
     name: 'Cyberpunk Era',
     style: 'cyberpunk',

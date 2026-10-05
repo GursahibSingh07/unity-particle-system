@@ -11,7 +11,7 @@ import { Projectile } from './Projectile';
 type Action = 'intro' | 'approach' | 'windup' | 'dash' | 'recover' | 'telegraph' | 'swap';
 
 const WINDUP_FRAME = 2;
-/** Frame of `era-icons` for each era (docs/DESIGN.md section 9) */
+/** Frame of `era-icons` for each era (src/art/v2/sheets.ts) */
 const ERA_ICON: Partial<Record<ArtStyle, number>> = { goldenAge: 0, cyberpunk: 1, retro: 2, manga: 3 };
 /** The colour each era is announced in, over its head and in its wind-up rings */
 const ERA_COLOR: Record<ArtStyle, number> = {

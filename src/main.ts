@@ -29,13 +29,8 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [Boot, Title, Game, Ending, UI],
 };
 
-if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('gallery')) {
-    // Contact sheet of every texture, for checking art
-    const { Gallery } = await import('./art/Gallery');
-    config.scene = [Gallery];
-}
 if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('gallery2')) {
-    // The v2 art, before it is switched on in the game
+    // Contact sheet of every texture, for checking art
     const { GalleryV2 } = await import('./art/v2/Gallery');
     config.scene = [GalleryV2];
 }
