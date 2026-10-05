@@ -329,28 +329,32 @@ export class Prism extends Monster {
         events.emit(Events.ERA_SWAPPED, era);
         events.emit(Events.BOSS_PHASE, this.swaps + 1, ERA_RAY[era]);
 
-        if (era === 'cyberpunk') {
-            this.callMinions();
-        }
+        this.callMinions(this.swaps);
     }
 
-    /** Cyberpunk: quick company, announced like any other spawn */
-    private callMinions() {
+    /** Company with every switch, one more each time, announced like any other spawn */
+    private callMinions(wanted: number) {
         const { minions } = PRISM;
+        const ids = minions.byEra[this.era];
+        const count = Math.min(wanted, minions.maxCount);
+        if (ids.length === 0 || count <= 0) {
+            return;
+        }
         // Its own body counts as one member of the group
         let alive = this.world.monsters.countActive(true) - 1;
         if (this.health < this.def.maxHealth * minions.minHealth) {
             return;
         }
         const offset = Math.random() * Math.PI * 2;
-        minions.ids.forEach((id, i) => {
+        for (let i = 0; i < count; i++) {
+            const id = ids[i % ids.length];
             if (alive >= minions.limit || !MONSTERS[id]) {
                 return;
             }
             alive++;
-            const angle = offset + (i / minions.ids.length) * Math.PI * 2;
+            const angle = offset + (i / count) * Math.PI * 2;
             this.world.summon(id, this.x + Math.cos(angle) * minions.radius, this.y + Math.sin(angle) * minions.radius);
-        });
+        }
     }
 
     /** Manga: a ring of shards from where the dash ended, one of them straight at the player */

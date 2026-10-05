@@ -29,7 +29,7 @@ import {
 
 /** Section 2: the eras in play order, and what each hands over as it begins */
 const ERAS: { style: StyleId; grants: UpgradeId[]; timed: boolean }[] = [
-    { style: 'goldenAge', grants: ['red', 'blue', 'green'], timed: false },
+    { style: 'goldenAge', grants: ['red', 'blue', 'green'], timed: true },
     { style: 'cyberpunk', grants: ['dash'], timed: true },
     { style: 'retro', grants: ['doubleDash', 'uv'], timed: true },
     { style: 'manga', grants: ['white'], timed: true },
@@ -68,8 +68,8 @@ const CLASSES: Record<MonsterId, EnemyClass> = {
     prism: 'boss',
 };
 
-/** Section 2: what each of Golden's four waves introduces */
-const GOLDEN_WAVES: MonsterId[][] = [['rat'], ['slime', 'bat'], ['ironclad'], ['golem']];
+/** Section 2: the order Golden's clock brings its enemies in (ideas.md v2.1: Golden is timed too) */
+const GOLDEN_ORDER: MonsterId[][] = [['rat'], ['slime', 'bat'], ['ironclad'], ['golem']];
 
 /** Section 2: the era each class first appears in (index into LEVELS), and the order within it */
 const FIRST_APPEARANCE: { enemyClass: EnemyClass; era: number; order: MonsterId[] }[] = [
@@ -172,22 +172,23 @@ describe('the eras', () => {
     });
 });
 
-describe('Golden Age', () => {
-    const waves = LEVELS[0].rooms[0].waves;
+describe('Golden Era', () => {
+    const table = LEVELS[0].rooms[0].continuous?.table ?? [];
+    /** The first second each enemy can arrive, or Infinity if it never does */
+    const firstAt = (monster: MonsterId) => Math.min(Infinity, ...table.filter((entry) => entry.monster === monster).map((entry) => entry.from ?? 0));
 
-    it('has four waves', () => {
-        expect(waves).toHaveLength(GOLDEN_WAVES.length);
+    it('runs on a two-minute clock', () => {
+        expect(LEVELS[0].rooms[0].continuous?.duration).toBe(120);
     });
 
-    it.each(GOLDEN_WAVES.map((monsters, i) => ({ wave: i + 1, monsters })))(
-        'wave $wave introduces $monsters, and nothing introduced later',
-        ({ wave, monsters }) => {
-            const present = waves[wave - 1]?.spawns.map((group) => group.monster) ?? [];
+    it.each(GOLDEN_ORDER.map((monsters, i) => ({ step: i + 1, monsters })))(
+        'step $step brings $monsters, after everything before it',
+        ({ step, monsters }) => {
             for (const monster of monsters) {
-                expect(present, `Golden wave ${wave} should bring the ${monster}`).toContain(monster);
-            }
-            for (const later of GOLDEN_WAVES.slice(wave).flat()) {
-                expect(present, `Golden wave ${wave} brings the ${later} before its own wave`).not.toContain(later);
+                expect(firstAt(monster), `Golden never brings the ${monster}`).toBeLessThan(120);
+                for (const earlier of GOLDEN_ORDER.slice(0, step - 1).flat()) {
+                    expect(firstAt(monster), `Golden brings the ${monster} before the ${earlier}`).toBeGreaterThan(firstAt(earlier));
+                }
             }
         },
     );
@@ -334,9 +335,9 @@ describe('rooms', () => {
 });
 
 describe('timed eras', () => {
-    it('are the three the design names', () => {
+    it('are the four the design names', () => {
         const timed = ERA_CASES.filter(({ level }) => level.rooms[0].continuous).map(({ level }) => level.style);
-        expect(timed).toEqual(['cyberpunk', 'retro', 'manga']);
+        expect(timed).toEqual(['goldenAge', 'cyberpunk', 'retro', 'manga']);
     });
 
     it.each(TIMED_CASES)('$label: the clock, the cap and the pace are sane', ({ label, continuous }) => {

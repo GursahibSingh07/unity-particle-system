@@ -7,7 +7,7 @@ import { squareWithCrack } from './crack';
 // is no armour, speed or stealth here at all: only throwers, and swarm to be pushed about.
 // The arc and the arithmetic behind these numbers are in docs/LEVELS.md.
 export const manga: LevelDef = {
-    name: 'White Page',
+    name: 'Manga Era',
     style: 'manga',
     radiations: ['white'],
     grants: ['white'],
@@ -20,11 +20,11 @@ export const manga: LevelDef = {
             waves: [],
             continuous: {
                 duration: 120,
-                // One arrival every 4.6 s at the start, every 2.6 s at the end
-                spawnEvery: [4600, 2600],
+                // One arrival every 2.3 s at the start, every 1.3 s at the end
+                spawnEvery: [2300, 1300],
                 // Throwers are slow to kill with White (four rings each), so this cap is what
                 // keeps the air readable: at worst about five things thrown a second
-                maxAlive: 14,
+                maxAlive: 24,
                 surge: 20,
                 checkpointEvery: 45,
                 table: [

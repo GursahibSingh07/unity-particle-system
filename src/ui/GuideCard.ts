@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 import { GUIDE } from '../config/text';
 import type { ArtStyle, MonsterId } from '../types';
 import { dashedRect, halftoneFade, panel } from './draw';
+import { getSettings } from '../settings';
 import { LABELS } from './labels';
+import { rayNames, weakTo } from './WeaponGuide';
 import { INK, PAPER, PAPER_SHADE, PENCIL, RED, STYLE_THEME, makeText } from './theme';
 
 const MARGIN = 12;
@@ -103,7 +105,13 @@ export class GuideCard {
         this.noteY = ruleY + Math.round(titleSize * 0.4) + 2;
         const stacked = options.truthSlot && !options.truthOverNote;
         const room = height - this.noteY - MARGIN - (stacked ? truthHeight + 8 : 0);
-        const noteText = unlocked ? (entry?.note ?? '') : LABELS.lockedNote;
+        let noteText = unlocked ? (entry?.note ?? '') : LABELS.lockedNote;
+        if (getSettings().demoMode) {
+            // Demo mode gives away what the game otherwise leaves the player to find out
+            const rays = weakTo(id);
+            noteText += `
+${LABELS.weakTo} ${rays.length > 0 ? rayNames(rays) : LABELS.noWeakness}`;
+        }
         // Long notes step down a size rather than spill off the page
         const sizes = options.noteSizes ?? (options.truthSlot ? [17, 15, 13] : [19, 17, 15, 13]);
         const make = (size: number) =>

@@ -3,10 +3,12 @@ import { LEVELS } from '../config/levels';
 import { GUIDE } from '../config/text';
 import { Progress } from '../state';
 import type { ArtStyle, LevelDef, MonsterId } from '../types';
+import { getSettings } from '../settings';
 import { burst, burstPoints, controlsRow, dashedRect, panel, pixelNumber, pixelNumberWidth } from './draw';
 import { GUIDE_ORDER, GuideCard, guideSprite } from './GuideCard';
 import { LABELS } from './labels';
 import { SettingsPanel } from './SettingsPanel';
+import { buildWeaponGuide } from './WeaponGuide';
 import { Depth, GREY, INK, PAPER, PAPER_SHADE, PENCIL, RED, SCREEN_HEIGHT, SCREEN_WIDTH, STYLE_THEME, YELLOW, makeText } from './theme';
 
 const SHEET = { x: 50, y: 26, width: 1180, height: 668 };
@@ -34,9 +36,14 @@ export interface PauseContext {
     select: () => void;
 }
 
-const TABS = ['map', 'guide', 'settings'] as const;
+const TABS = ['map', 'guide', 'weapons', 'settings'] as const;
 type Tab = (typeof TABS)[number];
-const TAB_LABELS: Record<Tab, string> = { map: LABELS.mapTab, guide: LABELS.guideTab, settings: LABELS.settingsTab };
+const TAB_LABELS: Record<Tab, string> = {
+    map: LABELS.mapTab,
+    guide: LABELS.guideTab,
+    weapons: LABELS.weaponsTab,
+    settings: LABELS.settingsTab,
+};
 
 interface Area {
     x: number;
@@ -90,6 +97,11 @@ export class PausePage {
     }
 
     /** Q and E (and Tab) turn the page */
+    /** True while the page of eras is the one showing */
+    get showingMap() {
+        return this.tab === 'map';
+    }
+
     turn(step: 1 | -1) {
         this.tab = TABS[(TABS.indexOf(this.tab) + step + TABS.length) % TABS.length];
         this.build();
@@ -150,7 +162,14 @@ export class PausePage {
         this.settings = undefined;
         this.areas = [];
         this.header = this.buildTabs();
-        this.content = this.tab === 'map' ? this.buildMap() : this.tab === 'guide' ? this.buildGuide() : this.buildSettings();
+        this.content =
+            this.tab === 'map'
+                ? this.buildMap()
+                : this.tab === 'guide'
+                  ? this.buildGuide()
+                  : this.tab === 'weapons'
+                    ? buildWeaponGuide(this.scene, CONTENT.x, CONTENT.y, CONTENT.width, CONTENT.height)
+                    : this.buildSettings();
         this.root.add([this.header, this.content]);
     }
 
@@ -183,7 +202,10 @@ export class PausePage {
             }
             x += width + 8;
         }
-        const hint = this.tab === 'guide' ? `${LABELS.switchTabs}     ${LABELS.guideHint}` : LABELS.switchTabs;
+        let hint = this.tab === 'guide' ? `${LABELS.switchTabs}     ${LABELS.guideHint}` : LABELS.switchTabs;
+        if (this.tab === 'map' && getSettings().demoMode) {
+            hint += `     ${LABELS.demoJump}`;
+        }
         const hintText = makeText(this.scene, x + 14, 74, hint, 16, { color: GREY }).setOrigin(0, 0.5);
         // The hint gives way to the PAUSED stamp
         const room = CONTENT.x + CONTENT.width - 210 - (x + 14);

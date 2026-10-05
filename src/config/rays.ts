@@ -30,7 +30,7 @@ export const RAYS: Record<RayId, RayDef> = {
         name: 'Green',
         key: 3,
         color: 0x62f05a,
-        damage: 26,
+        damage: 13,
         energyCost: 28,
     },
     // Defensive: the damage is small, the push is the point
@@ -96,10 +96,15 @@ export const RED = {
 /** Hold to charge, release a blob that bursts and slows */
 export const GREEN = {
     chargeTime: 550,
-    /** Released with less charge than this fraction, it only fizzles (and costs nothing) */
-    minCharge: 0.35,
-    /** Damage and burst size at the smallest charge that fires, as a fraction of a full one */
-    minPower: 0.55,
+    /** Any tap fires (v2.2): there is no charge too small */
+    minCharge: 0,
+    /**
+     * Damage of an uncharged blob as a fraction of a full one. Two thirds means what a full
+     * charge kills in two hits, a tap kills in three.
+     */
+    minPower: 0.67,
+    /** How far an uncharged blob travels; a full charge goes the whole `range` */
+    minRange: 30,
     /** The Handler walks at this fraction of his speed while charging */
     moveScale: 0.6,
     /** Pause after a blob before the next charge can start */
@@ -107,19 +112,19 @@ export const GREEN = {
     blobSpeed: 175,
     blobRadius: 3.5,
     range: 132,
-    burstRadius: 26,
+    burstRadius: 13,
     /** Enemies caught in the burst move at this fraction of their speed, for this long */
     slowFactor: 0.45,
     slowDuration: 2600,
     /** The burst leaves a puddle that keeps slowing whatever stands in it */
-    puddleDuration: 1500,
+    puddleDuration: 7000,
     puddleEvery: 200,
     puddleSlowDuration: 500,
 };
 
 /** A ring around the player that pushes enemies and projectiles away */
 export const WHITE = {
-    range: 46,
+    range: 37,
     cooldown: 600,
     knockbackSpeed: 170,
     knockbackDuration: 280,
@@ -134,6 +139,8 @@ export const UV = {
     halfAngle: 32,
     cooldown: 450,
     flashDuration: 300,
+    /** Everything caught in the cone is dazzled for this long, hidden or not */
+    stun: 100,
 };
 
 export const WHEEL = {

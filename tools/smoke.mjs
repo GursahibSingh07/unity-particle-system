@@ -2637,7 +2637,8 @@ async function runDev(browser) {
         }
     }
     if (wants('death')) {
-        await step('Death in Golden restarts the wave', goldenDeathStep);
+        // Golden is on a clock too since v2.1, so no shipped era has several waves to die between;
+        // goldenDeathStep is kept for the day one does again
         await step('Death in a timed era restarts from the last checkpoint', timedDeathStep);
     }
     if (wants('sandbox')) {

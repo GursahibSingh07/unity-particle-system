@@ -15,7 +15,6 @@ const JAM = { min: 10, max: 15 };
 /** Minutes, from the table in docs/DESIGN.md section 2 */
 const ALLOWANCE = {
     coverAndIntro: 0.5,
-    golden: 2.5,
     boss: 2,
     ending: 1,
 };
@@ -29,7 +28,7 @@ const timed = ERA_CASES.filter(({ level }) => level.rooms[0].continuous).map(({ 
     continuous: level.rooms[0].continuous!,
 }));
 const clockMinutes = timed.reduce((sum, { continuous }) => sum + continuous.duration, 0) / 60;
-const fixed = ALLOWANCE.coverAndIntro + ALLOWANCE.golden + ALLOWANCE.boss + ALLOWANCE.ending;
+const fixed = ALLOWANCE.coverAndIntro + ALLOWANCE.boss + ALLOWANCE.ending;
 const turns = ((LEVELS.length - 1) * (FLOW.nextEraDelay + 2 * FLOW.fade)) / 60000;
 
 /** A run with no deaths */
@@ -41,8 +40,8 @@ const clean = fixed + clockMinutes + timed.length * CARDS_PER_TIMED_ERA + turns;
 const withDeaths = clean + timed.reduce((sum, { continuous }) => sum + checkpointSeconds(continuous) / 2, 0) / 60;
 
 describe('timing budget (jam rule: 10 to 15 minutes)', () => {
-    it('has three timed eras to add up', () => {
-        expect(timed).toHaveLength(3);
+    it('has four timed eras to add up', () => {
+        expect(timed).toHaveLength(4);
     });
 
     it(`a clean run is inside the window (computed: ${clean.toFixed(2)} min)`, () => {
@@ -51,7 +50,7 @@ describe('timing budget (jam rule: 10 to 15 minutes)', () => {
     });
 
     it(`a run with one death in every timed era is still inside it (computed: ${withDeaths.toFixed(2)} min)`, () => {
-        expect(withDeaths, `run of ${withDeaths.toFixed(2)} minutes with three average deaths`).toBeLessThanOrEqual(JAM.max);
+        expect(withDeaths, `run of ${withDeaths.toFixed(2)} minutes with one average death per timed era`).toBeLessThanOrEqual(JAM.max);
     });
 
     it.each(timed)('$label: the clock fits the 2.25 minutes the design gives a timed era', ({ label, continuous }) => {

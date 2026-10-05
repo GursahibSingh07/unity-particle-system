@@ -63,3 +63,21 @@ v2.1
 - Demo mode toggle should unlock all levels even in the middle of the game
 - For manga era, increase the mob spawn rate by twice, too little mobs right now.
 - prism phase change timer should be reduced to 2 seconds.
+
+V2.2 
+
+- Green ray charge should work in the following way - Uncharged - 3 attacks to kill monsters and very short distance travelled
+                                                      Fully Charged - 2 attacks to kill monsters, long distance travels
+- White ray should have 20% less radius
+- UV Cone stuns all enemies for 0.1 secs
+- Field guide should have every monster's weakness in demo mode only.
+- Add a weapon guide explaining every ray and excatly its effects. In demo mode it should show exactly the enemy its strong against
+
+v2.3
+- Cap the number of enemies boss spawns per phase change to 3 and total limit to 5 (that means if there are 4 enemies on screen already, phase change only spawns 1)
+- During boss fight all 3 weapon types (emw, white, uv ) are available regardless of the boss phase
+- Collison Physics is extremely janky please fix that.
+- Increase armo0r type enemies spawn during boss phase, they are almost non existent in normal playthrough i didnt even aee the golem
+- Also blue cone is strong against "swarm of enemies"
+- Increase blue ray damage to 16.
+- Change the ui to look like a comic book, page 1 (left) should be all the eras arranged like comic panels and page 2 (right) should have controls and stuff like pages inked, guide pages and secrets found.. page 3 (left and right) should be field guide, page 4 (left and right should be the machine), page 5 (left and rtight should be settings and include a button for exiting to home screen.). Page turn should have page turn animations and do not use generic claude game ui colors. make it unique with different font and comic style colors and fonts

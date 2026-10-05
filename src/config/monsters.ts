@@ -428,7 +428,7 @@ export const PRISM = {
     backOffSpeed: 44,
 
     /** The coming era shows over its head for this long; it stands still and can be hit freely */
-    telegraph: 3000,
+    telegraph: 2000,
     /** A beat after the switch before it moves again */
     swapPause: 600,
 
@@ -440,11 +440,22 @@ export const PRISM = {
         plain: { speed: 1, windup: 1, dashSpeed: 1, rest: 1 },
     } as Record<ArtStyle, PrismEra>,
 
-    /** Cyberpunk: speed-class company arrives with the switch */
+    /**
+     * Company arrives with every switch: one on the first, one more each time after. Who comes
+     * depends on the era it has switched to.
+     */
     minions: {
-        ids: ['zigbat', 'skitter'] as MonsterId[],
-        /** Not called if this many are still alive */
-        limit: 3,
+        byEra: {
+            goldenAge: ['rat', 'slime', 'bat'],
+            cyberpunk: ['zigbat', 'skitter'],
+            retro: ['ghost', 'rat', 'wraith'],
+            manga: ['snowman', 'rat', 'acidSlime'],
+            plain: [],
+        } as Record<ArtStyle, MonsterId[]>,
+        /** Never more than this many arrive at once, however long the fight runs */
+        maxCount: 6,
+        /** None are called while this many are still alive */
+        limit: 10,
         radius: 34,
         /** Not called when the boss is nearly dead, so none arrives after it falls */
         minHealth: 0.12,
@@ -456,7 +467,7 @@ export const PRISM = {
         shimmerAlpha: 0.24,
         windupAlpha: 0.65,
         /** Damage it takes while hidden, as a fraction */
-        hiddenMultiplier: 0.25,
+        hiddenMultiplier: 0,
         stun: 600,
         revealFor: 4000,
         /** What each exposure costs it, no more than once every exposeEvery */

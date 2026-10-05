@@ -16,11 +16,11 @@ export const TITLE = {
 
 /** What each era is called. The level names in src/config/levels match these. */
 export const ERA_NAMES: Record<StyleId, string> = {
-    goldenAge: 'Golden Age',
-    cyberpunk: 'Neon Dusk',
-    retro: 'Late Edition',
-    manga: 'White Page',
-    finalPage: 'The Final Page',
+    goldenAge: 'Golden Era',
+    cyberpunk: 'Cyberpunk Era',
+    retro: 'Retro Era',
+    manga: 'Manga Era',
+    finalPage: 'Boss Era',
     plain: 'An Ordinary Afternoon',
 };
 

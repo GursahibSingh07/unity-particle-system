@@ -5,7 +5,7 @@ import { SQUARE_LAYOUT } from '../square';
 // (ERA_RULES.finalPage); every third attack it switches the era, and the machine obeys that
 // era's rule until the next switch. No grants and no secret. Notes are in docs/LEVELS.md.
 export const boss: LevelDef = {
-    name: 'The Final Page',
+    name: 'Boss Era',
     style: 'finalPage',
     radiations: ['blue', 'red', 'green', 'white', 'uv'],
     introText: [

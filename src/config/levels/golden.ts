@@ -1,10 +1,10 @@
 import type { LevelDef } from '../../types';
 import { squareWithCrack } from './crack';
 
-// Era 1, "Golden Age". The tutorial: the full wheel (Blue, Red, Green), no dash, four waves.
-// Each wave brings one new thing and the ray that suits it. Timings are in docs/LEVELS.md.
+// Era 1, "Golden Era". The tutorial: the full wheel (Blue, Red, Green), no dash. Two minutes on
+// the clock; waves keep coming until it runs out, each new arrival suited to a different ray.
 export const golden: LevelDef = {
-    name: 'Golden Age',
+    name: 'Golden Era',
     style: 'goldenAge',
     radiations: ['blue', 'red', 'green'],
     grants: ['blue', 'red', 'green'],
@@ -18,40 +18,28 @@ export const golden: LevelDef = {
             // Secret: the shop front left of the town hall (north wall, lower row)
             layout: squareWithCrack(4, 1),
             secret: 'blue',
-            waves: [
-                // 1. Rats, as a cluster of six and one of four. One Blue flash kills every rat in the
-                // cone, so the first thing the player learns is that Blue is for packs.
-                { spawns: [{ monster: 'rat', count: 10 }], delay: 800 },
-                // 2. Slimes hop round the fountain while bats fly straight over it. A slime takes
-                // three Blue flashes: the first enemy that does not just vanish.
-                {
-                    spawns: [
-                        { monster: 'slime', count: 5 },
-                        { monster: 'bat', count: 8 },
-                    ],
-                    delay: 1500,
-                },
-                // 3. Two Ironclads that keep their distance and throw, with three slimes to keep
-                // the player moving. Blue only chips at them; Red makes the big words.
-                {
-                    spawns: [
-                        { monster: 'ironclad', count: 2 },
-                        { monster: 'slime', count: 3 },
-                    ],
-                    delay: 1500,
-                },
-                // 4. The Golem rolls in with company. Rays stop at it, so the pack and the Ironclad
-                // behind it are safe until the player steps round: the era's exam.
-                {
-                    spawns: [
-                        { monster: 'golem', count: 1 },
-                        { monster: 'ironclad', count: 1 },
-                        { monster: 'rat', count: 12 },
-                        { monster: 'bat', count: 6 },
-                    ],
-                    delay: 1800,
-                },
-            ],
+            waves: [],
+            continuous: {
+                duration: 120,
+                // A wave every 4.5 s at the start, every 2.6 s by the end
+                spawnEvery: [4500, 2600],
+                maxAlive: 20,
+                surge: 20,
+                checkpointEvery: 45,
+                table: [
+                    // 0:00 Rats in packs: one Blue flash clears a pack, so Blue is for crowds
+                    { monster: 'rat', weight: 5, group: 6 },
+                    // 0:18 Slimes hop round the fountain: the first thing that does not just vanish
+                    { monster: 'slime', weight: 3, group: 3, from: 18 },
+                    // 0:30 Bats fly straight over the fountain
+                    { monster: 'bat', weight: 3, group: 5, from: 30 },
+                    // 0:50 Just past the first checkpoint: an Ironclad. Blue chips at it; Red bites.
+                    { monster: 'ironclad', weight: 2, from: 50 },
+                    // 1:25 The Golem rolls in and shields whatever is behind it
+                    { monster: 'golem', weight: 1, from: 85 },
+                    { monster: 'rat', weight: 2, group: 8, from: 85 },
+                ],
+            },
         },
     ],
 };

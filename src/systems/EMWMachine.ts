@@ -37,6 +37,7 @@ export interface RayTarget {
     takeDamage(ray: RayId, amount: number): boolean | void;
     knockback?(fromX: number, fromY: number, speed: number, ms: number): void;
     slow?(factor: number, ms: number): void;
+    stun?(ms: number): void;
     exposeToUv?(): boolean;
     blocksRays?: boolean;
 }
@@ -66,6 +67,8 @@ interface Blob {
     y: number;
     angle: number;
     travelled: number;
+    /** How far this one goes before it bursts: longer for a fuller charge */
+    range: number;
     /** 0 to 1: how full the charge was */
     power: number;
     /** Overdrive at the moment it was fired */
@@ -570,6 +573,7 @@ export class EMWMachine {
         const def = RAYS.uv;
         const { targets, rim, origin } = this.cone('uv', UV.range, UV.halfAngle, false);
         for (const monster of targets) {
+            monster.stun?.(UV.stun);
             const revealed = typeof monster.exposeToUv === 'function' && monster.exposeToUv();
             if (!revealed && monster.active) {
                 fx.fizz(this.scene, monster.x, monster.y - monster.def.radius - 3);
@@ -734,6 +738,7 @@ export class EMWMachine {
             y,
             angle,
             travelled: 0,
+            range: Phaser.Math.Linear(GREEN.minRange, GREEN.range, power),
             power,
             boost: this.boost,
             sprite: new fx.BlobSprite(this.scene, def.color, size, angle),
@@ -748,7 +753,7 @@ export class EMWMachine {
         for (const blob of this.blobs.slice()) {
             const cos = Math.cos(blob.angle);
             const sin = Math.sin(blob.angle);
-            const step = Math.min((GREEN.blobSpeed * delta) / 1000, GREEN.range - blob.travelled);
+            const step = Math.min((GREEN.blobSpeed * delta) / 1000, blob.range - blob.travelled);
 
             // The first thing in its way this frame: a wall, or any enemy's body
             let stop = castRay(blob.x, blob.y, blob.angle, step, this.walls);
@@ -768,7 +773,7 @@ export class EMWMachine {
             blob.x += cos * stop;
             blob.y += sin * stop;
             blob.travelled += stop;
-            if (hit || blob.travelled >= GREEN.range - 0.01) {
+            if (hit || blob.travelled >= blob.range - 0.01) {
                 this.burst(blob, cos, sin);
             } else if (blob.travelled > MACHINE_LENGTH) {
                 blob.sprite.draw(blob.x, blob.y, now);

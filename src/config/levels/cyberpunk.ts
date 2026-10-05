@@ -6,7 +6,7 @@ import { squareWithCrack } from './crack';
 // arrives: zig-zag bats from the first second, the skitter after the first checkpoint.
 // The arc and the arithmetic behind these numbers are in docs/LEVELS.md.
 export const cyberpunk: LevelDef = {
-    name: 'Neon Dusk',
+    name: 'Cyberpunk Era',
     style: 'cyberpunk',
     radiations: ['red', 'green'],
     grants: ['dash'],

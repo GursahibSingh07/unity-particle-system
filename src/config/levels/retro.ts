@@ -7,7 +7,7 @@ import { squareWithCrack } from './crack';
 // stealth is why: the ghost from the tenth second, the wraith after the first checkpoint.
 // The arc and the arithmetic behind these numbers are in docs/LEVELS.md.
 export const retro: LevelDef = {
-    name: 'Late Edition',
+    name: 'Retro Era',
     style: 'retro',
     radiations: ['blue', 'red', 'green', 'uv'],
     grants: ['doubleDash', 'uv'],

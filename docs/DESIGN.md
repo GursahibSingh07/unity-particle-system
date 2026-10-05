@@ -4,6 +4,26 @@ The working contract for art, audio, eras and code. The design comes from the te
 
 Jam rules (`docs/rules.md`) that shape everything: a complete loop of 10-15 minutes; all three themes (Comic, Twist, Light); fresh original code; only free or self-made assets, credited; AI use disclosed.
 
+## v2.1 changes (from docs/ideas.md, 5 October 2026)
+
+These override anything below that disagrees.
+
+- **Era names:** Golden Era, Cyberpunk Era, Retro Era, Manga Era, Boss Era.
+- **Golden is timed too:** a two-minute clock; waves keep arriving until it runs out (rats, then slimes and bats, then the Ironclad, then the Golem), with checkpoints and a surge like the other eras.
+- **Green:** half the damage (13), half the burst area (radius 13), and the slowing puddle it leaves lasts 7 seconds.
+- **Stealth:** a hidden ghost, and the boss while hidden in its Retro phase, take no damage at all until UV reveals them.
+- **Boss:** every era switch brings company, one enemy on the first switch and one more each time (up to six), of kinds that suit the era switched to. The warning before a switch is 2 seconds.
+- **Manga:** enemies arrive twice as fast (cap raised from 14 to 24).
+- **Demo mode:** when it is on, keys 1-5 on the pause screen's Pages tab jump to that era in the middle of a game.
+
+## v2.2 changes (from docs/ideas.md, 5 October 2026)
+
+- **Green charge:** any tap fires. An uncharged blob does two thirds of the damage (what a full charge kills in two hits, a tap kills in three) and travels a short way (30 units); a full charge travels the full 132.
+- **White:** the ring's radius is 20% smaller (46 to 37).
+- **UV:** the cone also stuns everything in it for 0.1 seconds.
+- **Field Guide:** in demo mode only, each page also names the rays that enemy is weak to.
+- **Weapon guide:** a new pause tab, THE MACHINE, explains every ray with the numbers the game uses. In demo mode it also lists the enemies each ray is strong against.
+
 ## 1. The game in one paragraph
 
 A top-down action game in the look of a 16-bit console RPG. The Light Handler defends a city square with the EMW Machine, turning its colour wheel to match the ray to the enemy. The square is the same place in every era, but each era it is drawn with less: fewer details, fewer colours. The Handler has schizophrenia and it is getting worse, and the player sees the world drain as he does. In the ending the detail returns, in plain daylight: there were never any monsters, he has been shining a pocket torch at passers-by, and he is arrested for causing mild annoyance to the public.

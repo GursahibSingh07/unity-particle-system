@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { LEVELS } from '../config/levels';
 import { Events } from '../events';
+import { getSettings } from '../settings';
 import type { ArtStyle, MonsterId, RayMode, StyleId, UpgradeId, WeaponRule } from '../types';
 import { DialogModal, LevelIntroModal, type Modal, type ModalHooks } from '../ui/Captions';
 import { CreditsModal, GuideTruthModal, ReportModal, UpgradeModal } from '../ui/Cards';
@@ -277,6 +278,8 @@ export class UI extends Phaser.Scene {
             } else if (code === 'Tab' || code === 'KeyQ' || code === 'KeyE') {
                 this.page.turn(code === 'KeyQ' || (code === 'Tab' && event.shiftKey) ? -1 : 1);
                 this.game.events.emit(Events.UI_SELECT);
+            } else if (this.page.showingMap && getSettings().demoMode && /^Digit[1-9]$/.test(code)) {
+                this.jumpToEra(Number(code.slice(5)) - 1);
             } else {
                 this.page.key(code);
             }
@@ -298,6 +301,15 @@ export class UI extends Phaser.Scene {
     /** Only in the middle of play: not under a caption or card, not in the ending */
     private canPause() {
         return !this.ending && this.queue.length === 0 && this.scene.isActive('Game');
+    }
+
+    /** Demo mode: every era can be opened from the pause page, in the middle of a game */
+    private jumpToEra(level: number) {
+        if (level >= LEVELS.length) {
+            return;
+        }
+        this.closePause();
+        this.scene.get('Game').scene.restart({ level, demo: true });
     }
 
     private openPause() {
