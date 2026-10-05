@@ -428,12 +428,14 @@ export const PRISM = {
     touchRecover: 900,
     backOffSpeed: 44,
 
-    /** The coming era shows over its head for this long; it stands still and can be hit freely */
-    telegraph: 3000,
+    /** The coming era shows over its head for this long; it stands still and can be hit freely (v2.6) */
+    telegraph: 2000,
     /** Dashes between one era switch and the next */
     attacksPerEra: 3,
     /** A beat after the switch before it moves again */
     swapPause: 600,
+    /** Nothing hurts it for this long after a switch; it blinks until it can be hurt again (v2.6) */
+    swapShield: 1000,
 
     era: {
         goldenAge: { speed: 1, windup: 1, dashSpeed: 1, rest: 1 },

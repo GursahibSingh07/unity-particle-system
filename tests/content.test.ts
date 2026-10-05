@@ -259,6 +259,12 @@ describe('the boss era', () => {
         }
         expect(PRISM.telegraph, 'the coming era must show "a few seconds beforehand"').toBeGreaterThanOrEqual(2000);
     });
+
+    it('switches the era with a 2-second warning and is untouchable for 1 second after (CHANGELOG v2.6)', () => {
+        expect(PRISM.telegraph).toBe(2000);
+        expect(PRISM.swapShield).toBe(1000);
+        expect(PRISM.swapShield, 'the shield must outlast the pause after the switch').toBeGreaterThanOrEqual(PRISM.swapPause);
+    });
 });
 
 describe('rooms', () => {
