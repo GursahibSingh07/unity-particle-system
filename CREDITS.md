@@ -1,6 +1,6 @@
 # Credits
 
-Light Handler was made for TGC GameJam 2026 by Gursahib Singh, Abhishek Bhadiyadra, Shardul Kholam, Laveena Jain and Harshil Soni.
+Light Handler was made for TGC GameJam 2026 by Gursahib Singh, Harshil Soni, Abhishek Bhadiyadra, Shardul Kholam and Laveena Jain.
 
 ## Third-party assets
 
