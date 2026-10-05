@@ -1,7 +1,7 @@
 # unity-particle-system
 TGC GameJam 2026 Project
 
-**Light Handler** - a top-down 2D browser game in a 16-bit console look, built with [Phaser 4](https://phaser.io/), Vite and TypeScript. You defend a city square with the EMW Machine, turning its colour wheel to match the ray to the enemy. The square is the same place in every era, but each era it is drawn with less.
+**Light Handler** - a top-down 2D browser game in a 32-bit console look, built with [Phaser 4](https://phaser.io/), Vite and TypeScript. You defend a city square with the EMW Machine, turning its colour wheel to match the ray to the enemy. The square is the same place in every era, but each era it is drawn with less.
 
 All art is pixel art defined in code and all music and sound is synthesised at runtime. There are no image or audio files.
 

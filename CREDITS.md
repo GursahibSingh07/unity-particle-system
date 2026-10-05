@@ -32,4 +32,4 @@ AI tools were used and are disclosed here as the jam rules require.
 
 - **Claude (Anthropic), through Claude Code**, was used to write code, to write the pixel-art and audio-synthesis source code that produces the game's art and sound, and to draft planning documents.
 - No image, audio or 3D generator was used: there are no AI-generated image or audio files in this repository.
-- The game concept, theme, story twist, and design direction come from the team (see `proposal.pdf` and `docs/`).
+- The game concept, theme, story , twist, and design comes from the team (see `proposal.pdf` and `docs/`).

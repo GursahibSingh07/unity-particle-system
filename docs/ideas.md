@@ -1,4 +1,4 @@
-v2
+# v2
 
    - Weapons : EMW machine with a color wheel at bottom right that can be rotated using a key to switch colors, and a special key to switch between uv mode, unprism mode, rgb mode.
    1. Blue ray, A cone attack in front that damaged all enemies at 1x the damage (good against swarm based enemies)
@@ -53,7 +53,7 @@ Twist is still there at the end/.
 the reason for falling details is that the person has schizo and its becoming worse over time so he is seeing less and less details and colors per level, so make sure your solution conveys that. (also we need 16 bits now instead of 8bits like stardew valley or chrono trigger )
 
 
-v2.1
+# v2.1
 
 - Green blob deals too much damage- it shoukd deal half the damage,  reduced area of green blob to half but also area lasts much longer (like 6-8 seconds)
 - Pages should be named after Eras like CyberPunk era, Retro Era, Manga Era.
@@ -64,8 +64,7 @@ v2.1
 - For manga era, increase the mob spawn rate by twice, too little mobs right now.
 - prism phase change timer should be reduced to 2 seconds.
 
-V2.2 
-
+# V2.2 
 - Green ray charge should work in the following way - Uncharged - 3 attacks to kill monsters and very short distance travelled
                                                       Fully Charged - 2 attacks to kill monsters, long distance travels
 - White ray should have 20% less radius
@@ -73,7 +72,7 @@ V2.2
 - Field guide should have every monster's weakness in demo mode only.
 - Add a weapon guide explaining every ray and excatly its effects. In demo mode it should show exactly the enemy its strong against
 
-v2.3
+# v2.3
 - Cap the number of enemies boss spawns per phase change to 3 and total limit to 5 (that means if there are 4 enemies on screen already, phase change only spawns 1)
 - During boss fight all 3 weapon types (emw, white, uv ) are available regardless of the boss phase
 - Collison Physics is extremely janky please fix that.
@@ -82,15 +81,13 @@ v2.3
 - Increase blue ray damage to 16.
 - Change the ui to look like a comic book, page 1 (left) should be all the eras arranged like comic panels and page 2 (right) should have controls and stuff like pages inked, guide pages and secrets found.. page 3 (left and right) should be field guide, page 4 (left and right should be the machine), page 5 (left and rtight should be settings and include a button for exiting to home screen.). Page turn should have page turn animations and do not use generic claude game ui colors. make it unique with different font and comic style colors and fonts
 
-v2.4
-
+# v2.4
 - Boss too hard, new enemy cap 4, boss spawns 2 every phase change.
 - Boss has 20% less length
 - Revert back the change of phase not affecting guns and all guns being available. Every phase will have only that era's gun mechani.
 - Boss should have a health bar
 
-v2.5 
-
+# v2.5 
 - Boss still too hard, make 3 attacks between phase changes and phase change timer lasts 3 seconds. Reduce boss health by 10%.
 - Give God mode in settings which gives unlimited health.
 - Reduce armor class health by 15%
