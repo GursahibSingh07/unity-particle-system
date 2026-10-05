@@ -39,7 +39,8 @@ export const retro: LevelDef = {
                     { monster: 'wraith', weight: 2, from: 50 },
                     { monster: 'zigbat', weight: 2, group: 3, from: 60 },
                     // 1:20 One thing that needs the right colour, when the wheel will not give it
-                    { monster: 'ironclad', weight: 1, from: 80 },
+                    { monster: 'ironclad', weight: 2, from: 60 },
+                    { monster: 'golem', weight: 2, from: 80 },
                     // 1:35 Past the second checkpoint: the horde
                     { monster: 'rat', weight: 3, group: 8, from: 95 },
                 ],

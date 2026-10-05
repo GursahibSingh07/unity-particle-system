@@ -16,6 +16,29 @@ These override anything below that disagrees.
 - **Manga:** enemies arrive twice as fast (cap raised from 14 to 24).
 - **Demo mode:** when it is on, keys 1-5 on the pause screen's Pages tab jump to that era in the middle of a game.
 
+## v2.5 changes (from docs/ideas.md, 5 October 2026)
+
+- **Boss:** three dashes between era switches (was two), a 3 second warning before each switch, and a tenth less health (1120 to 1008).
+- **God mode:** a setting, on the cover's settings sheet and in the pause book. Nothing hurts the player while it is on; it can be switched mid-era.
+- **Armour:** 15% less health (Ironclad 130 to 110, Golem 260 to 221).
+- **Rays:** White does 16 (was 12). UV stuns for 0.2 seconds. Green does 11 uncharged and 16 fully charged.
+
+## v2.4 changes (from docs/ideas.md, 5 October 2026)
+
+- **Boss company:** two arrive with every era switch, and never more than four are alive beside the boss.
+- **Boss length:** a fifth shorter (health 1400 to 1120).
+- **Boss weapon:** v2.3's "everything always available" is taken back. Each phase the machine obeys that era's rule again (no Blue in Cyberpunk; overdrive, a self-turning wheel and UV in Retro; White only in Manga). The dash is kept throughout.
+- **Boss health bar:** shown in the middle of the top strip for the whole fight.
+
+## v2.3 changes (from docs/ideas.md, 5 October 2026)
+
+- **Boss company:** at most 3 arrive with one era switch, and never more than 5 are alive beside the boss (with 4 there, a switch brings 1). Armour enemies lead each era's list.
+- **Boss weapon:** all three kinds of light (the colour wheel, White, UV) stay available through the whole fight, whatever era the boss has switched to. The era still sets how the machine behaves: overdrive and the self-turning wheel in Retro.
+- **Collisions:** bodies are boxes, not circles, and wall tiles are merged into long strips, so the player and enemies slide along walls and round corners without snagging.
+- **Armour shows up:** the Ironclad comes at 0:40 and the Golem at 1:05 in Golden, both more often; Ironclads and Golems are added to Cyberpunk and Retro and to the boss's company.
+- **Blue:** damage 16 (was 12), and 1.5x against swarm enemies.
+- **Pause screen:** an open comic book of two-page spreads (eras and stats; Field Guide; the machine; settings with an exit to the cover), with a page-turn animation and its own comic fonts and colours.
+
 ## v2.2 changes (from docs/ideas.md, 5 October 2026)
 
 - **Green charge:** any tap fires. An uncharged blob does two thirds of the damage (what a full charge kills in two hits, a tap kills in three) and travels a short way (30 units); a full charge travels the full 132.

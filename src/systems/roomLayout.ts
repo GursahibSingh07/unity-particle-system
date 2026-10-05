@@ -222,3 +222,32 @@ export function parseRoom(layout: string[]): ParsedRoom {
 
     return { tiles, solids, walls, start, secrets, entries };
 }
+
+/**
+ * Joins touching tiles into the fewest rectangles: runs along each row, then rows of the same
+ * span stacked into blocks. A wall built from one body per tile has a seam every 16 units, and
+ * arcade physics snags a sliding body on every one of them.
+ */
+export function mergeRects(tiles: Rect[]): Rect[] {
+    const sorted = [...tiles].sort((a, b) => a.y - b.y || a.x - b.x);
+    const runs: Rect[] = [];
+    for (const tile of sorted) {
+        const last = runs[runs.length - 1];
+        if (last && last.y === tile.y && last.height === tile.height && last.x + last.width === tile.x) {
+            last.width += tile.width;
+        } else {
+            runs.push({ x: tile.x, y: tile.y, width: tile.width, height: tile.height });
+        }
+    }
+
+    const blocks: Rect[] = [];
+    for (const run of runs.sort((a, b) => a.x - b.x || a.width - b.width || a.y - b.y)) {
+        const last = blocks[blocks.length - 1];
+        if (last && last.x === run.x && last.width === run.width && last.y + last.height === run.y) {
+            last.height += run.height;
+        } else {
+            blocks.push({ ...run });
+        }
+    }
+    return blocks;
+}

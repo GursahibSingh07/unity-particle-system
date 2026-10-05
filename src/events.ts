@@ -26,6 +26,8 @@ export const Events = {
     MONSTER_SPAWNING: 'monster-spawning',
     /** (id: MonsterId, worldX: number, worldY: number) A monster started an attack wind-up */
     MONSTER_WINDUP: 'monster-windup',
+    /** (health: number, maxHealth: number) The boss appeared, was hurt, or died (health 0) */
+    BOSS_HEALTH: 'boss-health',
     /** (phase: number, weakTo: RayId) The boss changed phase */
     BOSS_PHASE: 'boss-phase',
 

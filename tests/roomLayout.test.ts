@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SQUARE_LAYOUT } from '../src/config/square';
 import { ROOM, ROOM_COLS, ROOM_ROWS, TILE } from '../src/config/world';
-import { floorInFront, parseRoom, validateLayout, validateRoom } from '../src/systems/roomLayout';
+import { floorInFront, parseRoom, validateLayout, validateRoom, mergeRects } from '../src/systems/roomLayout';
 import type { ContinuousDef, RoomDef, WaveDef } from '../src/types';
 import { emptyLayout, setTile } from './helpers';
 
@@ -315,5 +315,26 @@ describe('parseRoom', () => {
         expect(parsed.solids.filter((solid) => !parsed.walls.includes(solid))).toHaveLength(8);
         expect(parsed.start).toEqual({ x: ROOM.x + 10 * TILE + TILE / 2, y: ROOM.y + 8 * TILE + TILE / 2 });
         expect(parsed.secrets).toEqual([]);
+    });
+});
+
+describe('mergeRects', () => {
+    const tile = (col: number, row: number) => ({ x: col * 16, y: row * 16, width: 16, height: 16 });
+
+    it('joins a row of tiles into one strip', () => {
+        expect(mergeRects([tile(0, 0), tile(1, 0), tile(2, 0)])).toEqual([{ x: 0, y: 0, width: 48, height: 16 }]);
+    });
+
+    it('stacks equal strips into one block, and keeps apart what does not touch', () => {
+        const merged = mergeRects([tile(0, 0), tile(1, 0), tile(0, 1), tile(1, 1), tile(5, 0)]);
+        expect(merged).toHaveLength(2);
+        expect(merged).toContainEqual({ x: 0, y: 0, width: 32, height: 32 });
+        expect(merged).toContainEqual({ x: 80, y: 0, width: 16, height: 16 });
+    });
+
+    it('covers exactly the area it was given', () => {
+        const tiles = [tile(0, 0), tile(1, 0), tile(2, 0), tile(0, 1), tile(0, 2), tile(4, 4)];
+        const area = mergeRects(tiles).reduce((sum, rect) => sum + rect.width * rect.height, 0);
+        expect(area).toBe(tiles.length * 16 * 16);
     });
 });

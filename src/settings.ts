@@ -9,6 +9,8 @@ export interface Settings {
     screenShake: boolean;
     /** Every era can be started from the cover */
     demoMode: boolean;
+    /** Nothing hurts the player */
+    godMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -16,6 +18,7 @@ export const DEFAULT_SETTINGS: Settings = {
     sfxVolume: 0.9,
     screenShake: true,
     demoMode: false,
+    godMode: false,
 };
 
 const STORAGE_KEY = 'light-handler.settings';

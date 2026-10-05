@@ -44,6 +44,7 @@ export class Prism extends Monster {
     era: ArtStyle;
     /** How many times it has switched the era */
     swaps = 0;
+    private reportedHealth = -1;
     action: Action = 'intro';
 
     private actionUntil: number;
@@ -112,6 +113,15 @@ export class Prism extends Monster {
         super.update(time, delta);
         if (this.active) {
             this.updateLook(this.scene.time.now);
+            this.reportHealth();
+        }
+    }
+
+    /** For the health bar: said once when it appears and again whenever it changes */
+    private reportHealth() {
+        if (this.health !== this.reportedHealth) {
+            this.reportedHealth = this.health;
+            this.scene.game.events.emit(Events.BOSS_HEALTH, Math.max(0, this.health), this.def.maxHealth);
         }
     }
 
@@ -183,6 +193,7 @@ export class Prism extends Monster {
         for (const projectile of this.world.projectiles.getChildren().slice()) {
             (projectile as Projectile).dissolve();
         }
+        this.scene.game.events.emit(Events.BOSS_HEALTH, 0, this.def.maxHealth);
         super.kill();
     }
 
@@ -237,7 +248,7 @@ export class Prism extends Monster {
                 break;
 
             case 'approach':
-                if (this.attacks >= 2) {
+                if (this.attacks >= PRISM.attacksPerEra) {
                     this.startTelegraph(now);
                 } else if (
                     now >= this.nextAttackAt &&
@@ -329,14 +340,14 @@ export class Prism extends Monster {
         events.emit(Events.ERA_SWAPPED, era);
         events.emit(Events.BOSS_PHASE, this.swaps + 1, ERA_RAY[era]);
 
-        this.callMinions(this.swaps);
+        this.callMinions(PRISM.minions.perSwitch);
     }
 
     /** Company with every switch, one more each time, announced like any other spawn */
     private callMinions(wanted: number) {
         const { minions } = PRISM;
         const ids = minions.byEra[this.era];
-        const count = Math.min(wanted, minions.maxCount);
+        const count = wanted;
         if (ids.length === 0 || count <= 0) {
             return;
         }

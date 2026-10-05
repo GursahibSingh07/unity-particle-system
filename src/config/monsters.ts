@@ -45,7 +45,7 @@ export const MONSTERS: Record<MonsterId, MonsterDef> = {
         name: 'Ironclad',
         color: 0x9aa0a8,
         radius: 7,
-        maxHealth: 130,
+        maxHealth: 110,
         speed: 18,
         contactDamage: 10,
         weakTo: ['green'],
@@ -69,7 +69,7 @@ export const MONSTERS: Record<MonsterId, MonsterDef> = {
         name: 'Golem',
         color: 0x9aa0a8,
         radius: 10,
-        maxHealth: 260,
+        maxHealth: 221,
         speed: 46,
         contactDamage: 16,
         weakTo: [],
@@ -142,7 +142,8 @@ export const MONSTERS: Record<MonsterId, MonsterDef> = {
         color: 0xff7ad9,
         radius: 13,
         // About two minutes of fighting through the era rules: see PRISM
-        maxHealth: 1400,
+        // v2.4 took a fifth off the 1400 it began with; v2.5 a tenth more
+        maxHealth: 1008,
         speed: 24,
         contactDamage: 14,
         weakTo: [],
@@ -428,7 +429,9 @@ export const PRISM = {
     backOffSpeed: 44,
 
     /** The coming era shows over its head for this long; it stands still and can be hit freely */
-    telegraph: 2000,
+    telegraph: 3000,
+    /** Dashes between one era switch and the next */
+    attacksPerEra: 3,
     /** A beat after the switch before it moves again */
     swapPause: 600,
 
@@ -446,16 +449,17 @@ export const PRISM = {
      */
     minions: {
         byEra: {
-            goldenAge: ['rat', 'slime', 'bat'],
-            cyberpunk: ['zigbat', 'skitter'],
-            retro: ['ghost', 'rat', 'wraith'],
-            manga: ['snowman', 'rat', 'acidSlime'],
+            // Armour comes first: it is what the eras themselves show least of
+            goldenAge: ['golem', 'ironclad', 'rat'],
+            cyberpunk: ['ironclad', 'zigbat', 'skitter'],
+            retro: ['golem', 'ghost', 'wraith'],
+            manga: ['ironclad', 'snowman', 'acidSlime'],
             plain: [],
         } as Record<ArtStyle, MonsterId[]>,
-        /** Never more than this many arrive at once, however long the fight runs */
-        maxCount: 6,
-        /** None are called while this many are still alive */
-        limit: 10,
+        /** How many arrive with every switch (v2.4) */
+        perSwitch: 2,
+        /** Never more than this many alive beside the boss: with 3 already there, a switch brings 1 */
+        limit: 4,
         radius: 34,
         /** Not called when the boss is nearly dead, so none arrives after it falls */
         minHealth: 0.12,

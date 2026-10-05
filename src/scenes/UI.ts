@@ -5,6 +5,7 @@ import { getSettings } from '../settings';
 import type { ArtStyle, MonsterId, RayMode, StyleId, UpgradeId, WeaponRule } from '../types';
 import { DialogModal, LevelIntroModal, type Modal, type ModalHooks } from '../ui/Captions';
 import { CreditsModal, GuideTruthModal, ReportModal, UpgradeModal } from '../ui/Cards';
+import { BossBar } from '../ui/BossBar';
 import { HitWords } from '../ui/HitWords';
 import { Hud } from '../ui/Hud';
 import { Overlays } from '../ui/Overlays';
@@ -30,6 +31,7 @@ const toLines = (lines: unknown): string[] =>
  */
 export class UI extends Phaser.Scene {
     private hud!: Hud;
+    private bossBar!: BossBar;
     private wheel!: Wheel;
     private words!: HitWords;
     private overlays!: Overlays;
@@ -57,6 +59,7 @@ export class UI extends Phaser.Scene {
         this.artStyle = 'goldenAge';
 
         this.hud = new Hud(this);
+        this.bossBar = new BossBar(this);
         this.wheel = new Wheel(this);
         this.words = new HitWords(this);
         this.overlays = new Overlays(this);
@@ -103,6 +106,7 @@ export class UI extends Phaser.Scene {
             [Events.SECRET_FOUND, () => this.overlays.secretFlourish()],
             [Events.GUIDE_UNLOCKED, (id: MonsterId) => this.overlays.guideToast(id, this.artStyle)],
             [Events.ERA_TIMER, (secondsLeft: number) => this.hud.setTimer(secondsLeft)],
+            [Events.BOSS_HEALTH, (health: number, max: number) => this.bossBar.set(health, max)],
             [Events.CHECKPOINT, () => this.overlays.checkpoint()],
             [Events.SURGE, () => this.overlays.surge()],
             [Events.BOSS_TELEGRAPH, (style: StyleId, inMs: number) => this.overlays.eraShift(style, inMs)],
@@ -159,6 +163,7 @@ export class UI extends Phaser.Scene {
         const level = LEVELS[index];
         // A different era (or the same one begun again): the clock and the warnings start clean
         this.hud.hideTimer();
+        this.bossBar.hide();
         this.overlays.clear();
         this.levelIndex = index;
         if (level) {
@@ -274,7 +279,10 @@ export class UI extends Phaser.Scene {
 
         if (this.page) {
             if (pauseKey) {
-                this.closePause();
+                // Esc first puts away a question the book is asking, then the book
+                if (code !== 'Escape' || !this.page.back()) {
+                    this.closePause();
+                }
             } else if (code === 'Tab' || code === 'KeyQ' || code === 'KeyE') {
                 this.page.turn(code === 'KeyQ' || (code === 'Tab' && event.shiftKey) ? -1 : 1);
                 this.game.events.emit(Events.UI_SELECT);
@@ -312,12 +320,30 @@ export class UI extends Phaser.Scene {
         this.scene.get('Game').scene.restart({ level, demo: true });
     }
 
+    /** Out of the run and back to the cover, from the pause book's last page */
+    private exitToTitle() {
+        this.page?.destroy();
+        this.page = undefined;
+        this.queue = [];
+        // Said before the scenes go, so every loop still sounding is stopped
+        this.game.events.emit(Events.PAUSED, false);
+        this.game.events.emit(Events.UI_SELECT);
+        this.scene.stop('Game');
+        // Stops this scene too, which clears the HUD; the cover starts the next game clean
+        this.scene.start('Title');
+    }
+
     private openPause() {
         this.scene.pause('Game');
         this.page = new PausePage(this, {
             levelIndex: this.levelIndex,
             style: this.artStyle,
             select: () => this.game.events.emit(Events.UI_SELECT),
+            jump: (level) => {
+                this.game.events.emit(Events.UI_SELECT);
+                this.jumpToEra(level);
+            },
+            exit: () => this.exitToTitle(),
         });
         this.game.events.emit(Events.PAUSED, true);
         this.game.events.emit(Events.UI_SELECT);

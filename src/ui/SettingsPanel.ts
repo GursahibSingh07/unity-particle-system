@@ -6,13 +6,14 @@ import { GREY, INK, PAPER, PAPER_SHADE, RED, WHITE, YELLOW, makeText } from './t
 
 type Row =
     | { kind: 'volume'; key: 'musicVolume' | 'sfxVolume'; label: string }
-    | { kind: 'toggle'; key: 'screenShake' | 'demoMode'; label: string; note?: string };
+    | { kind: 'toggle'; key: 'screenShake' | 'demoMode' | 'godMode'; label: string; note?: string };
 
 const ROWS: Row[] = [
     { kind: 'volume', key: 'musicVolume', label: LABELS.music },
     { kind: 'volume', key: 'sfxVolume', label: LABELS.sound },
     { kind: 'toggle', key: 'screenShake', label: LABELS.shake },
     { kind: 'toggle', key: 'demoMode', label: LABELS.demo, note: LABELS.demoNote },
+    { kind: 'toggle', key: 'godMode', label: LABELS.god, note: LABELS.godNote },
 ];
 
 const ROW_HEIGHT = 84;

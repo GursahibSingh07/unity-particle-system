@@ -39,7 +39,7 @@ afterEach(() => {
 describe('settings', () => {
     it('defaults: music 0.7, sound 0.9, screen shake on, demo mode off', async () => {
         const { DEFAULT_SETTINGS, getSettings } = await load(storage);
-        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false });
+        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false });
         expect(getSettings()).toEqual(DEFAULT_SETTINGS);
     });
 
@@ -49,9 +49,9 @@ describe('settings', () => {
     });
 
     it('reads what was saved, and fills the rest from the defaults', async () => {
-        storage.setItem(STORAGE_KEY, JSON.stringify({ musicVolume: 0.2, demoMode: true }));
+        storage.setItem(STORAGE_KEY, JSON.stringify({ musicVolume: 0.2, demoMode: true, godMode: false }));
         const { getSettings } = await load(storage);
-        expect(getSettings()).toEqual({ musicVolume: 0.2, sfxVolume: 0.9, screenShake: true, demoMode: true });
+        expect(getSettings()).toEqual({ musicVolume: 0.2, sfxVolume: 0.9, screenShake: true, demoMode: true, godMode: false });
     });
 
     it('plays with the defaults when what was saved cannot be read', async () => {
@@ -78,25 +78,25 @@ describe('settings', () => {
     it('plays with the defaults when there is no localStorage at all', async () => {
         const { DEFAULT_SETTINGS, getSettings, updateSettings } = await load();
         expect(getSettings()).toEqual(DEFAULT_SETTINGS);
-        expect(updateSettings({ demoMode: true }).demoMode).toBe(true);
+        expect(updateSettings({ demoMode: true, godMode: false }).demoMode).toBe(true);
     });
 
     it('never hands out the defaults object itself, so a change cannot alter them', async () => {
         const { DEFAULT_SETTINGS, getSettings, updateSettings } = await load(storage);
         expect(getSettings()).not.toBe(DEFAULT_SETTINGS);
         updateSettings({ musicVolume: 0, screenShake: false });
-        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false });
+        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false });
     });
 
     it('updateSettings merges the change, returns the result and saves all of it', async () => {
         const { getSettings, updateSettings } = await load(storage);
         const result = updateSettings({ musicVolume: 0.3 });
-        expect(result).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: false });
+        expect(result).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false });
         expect(getSettings()).toEqual(result);
         expect(JSON.parse(storage.getItem(STORAGE_KEY)!)).toEqual(result);
 
-        updateSettings({ demoMode: true });
-        expect(getSettings()).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: true });
+        updateSettings({ demoMode: true, godMode: false });
+        expect(getSettings()).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: true, godMode: false });
         expect(JSON.parse(storage.getItem(STORAGE_KEY)!)).toEqual(getSettings());
     });
 
@@ -104,7 +104,7 @@ describe('settings', () => {
         const first = await load(storage);
         first.updateSettings({ sfxVolume: 0.4, screenShake: false });
         const second = await load(storage);
-        expect(second.getSettings()).toEqual({ musicVolume: 0.7, sfxVolume: 0.4, screenShake: false, demoMode: false });
+        expect(second.getSettings()).toEqual({ musicVolume: 0.7, sfxVolume: 0.4, screenShake: false, demoMode: false, godMode: false });
     });
 
     it('watchSettings calls back at once and on every change, until it is stopped', async () => {
@@ -114,12 +114,12 @@ describe('settings', () => {
         expect(seen).toHaveLength(1);
         expect(seen[0].demoMode).toBe(false);
 
-        updateSettings({ demoMode: true });
+        updateSettings({ demoMode: true, godMode: false });
         expect(seen).toHaveLength(2);
         expect(seen[1].demoMode).toBe(true);
 
         stop();
-        updateSettings({ demoMode: false });
+        updateSettings({ demoMode: false, godMode: false });
         expect(seen).toHaveLength(2);
     });
 });

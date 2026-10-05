@@ -113,7 +113,9 @@ export class Player extends Phaser.GameObjects.Container {
         this.setDepth(DEPTH.player);
         scene.physics.add.existing(this);
         const offset = FOOTPRINT / 2 - BODY_RADIUS;
-        this.body.setCircle(BODY_RADIUS, offset, offset);
+        // A box: arcade physics slides a box along walls cleanly, where a circle snags on corners
+        this.body.setSize(BODY_RADIUS * 2, BODY_RADIUS * 2, false);
+        this.body.setOffset(offset, offset);
         this.body.setCollideWorldBounds(true);
 
         const keyboard = scene.input.keyboard!;

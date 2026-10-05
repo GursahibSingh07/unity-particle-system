@@ -14,6 +14,7 @@ import type { Monster, MonsterWorld } from '../entities/Monster';
 import { BASE_MAX_HEALTH, Player } from '../entities/Player';
 import type { Projectile } from '../entities/Projectile';
 import { Events } from '../events';
+import { watchSettings } from '../settings';
 import { Progress } from '../state';
 import { awaitAnswer } from '../systems/conversation';
 import { EMWMachine } from '../systems/EMWMachine';
@@ -21,7 +22,7 @@ import { checkpointSeconds } from '../systems/eraClock';
 import { EraSpawner } from '../systems/EraSpawner';
 import { Navigator } from '../systems/Navigation';
 import { shake } from '../systems/rayEffects';
-import { floorInFront, parseRoom, type ParsedRoom, type Rect, type RoomTile } from '../systems/roomLayout';
+import { floorInFront, parseRoom, type ParsedRoom, type Rect, type RoomTile, mergeRects } from '../systems/roomLayout';
 import { WaveDirector } from '../systems/WaveDirector';
 import type { ArtStyle, LevelDef, MonsterId, RayId, RoomDef, UpgradeId, WeaponRule } from '../types';
 
@@ -86,6 +87,7 @@ export class Game extends Phaser.Scene {
     private hearts!: Phaser.Physics.Arcade.Group;
     private upgrades!: Phaser.Physics.Arcade.Group;
     private solidBodies!: Phaser.Physics.Arcade.StaticGroup;
+    private devNoDamage = false;
     private room!: ParsedRoom;
     private world!: MonsterWorld;
     private nav!: Navigator;
@@ -151,8 +153,12 @@ export class Game extends Phaser.Scene {
         this.room = room;
         this.drawSquare(room);
         this.solidBodies = this.physics.add.staticGroup();
-        for (const tile of room.solids) {
-            this.solidBodies.add(this.add.zone(tile.x + TILE / 2, tile.y + TILE / 2, TILE, TILE));
+        // Buildings and furniture are merged separately: flyers pass over one and not the other,
+        // and the collider asks which it is by the block's centre
+        const walls = new Set(room.walls);
+        const furniture = room.solids.filter((tile) => !walls.has(tile));
+        for (const block of [...mergeRects(room.walls), ...mergeRects(furniture)]) {
+            this.solidBodies.add(this.add.zone(block.x + block.width / 2, block.y + block.height / 2, block.width, block.height));
         }
         this.addCrack(room);
 
@@ -225,8 +231,13 @@ export class Game extends Phaser.Scene {
         if (import.meta.env.DEV) {
             this.input.keyboard!.on('keydown-K', () => this.devSkip());
             // ?nodamage: nothing hurts the player, for automated tests
-            this.player.invincible = new URLSearchParams(window.location.search).has('nodamage');
+            this.devNoDamage = new URLSearchParams(window.location.search).has('nodamage');
         }
+        // God mode (Settings) can be switched on and off in the middle of an era
+        const stopWatching = watchSettings((settings) => {
+            this.player.invincible = this.devNoDamage || settings.godMode;
+        });
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, stopWatching);
 
         // Tell the HUD where things stand at the start of the era
         events.emit(Events.BANNER, '');
@@ -605,6 +616,8 @@ export class Game extends Phaser.Scene {
         if (rule) {
             // The wheel, the modes and the overdrive are the era's; the dash stays as the fight
             // began with it, because losing it mid-fight is more than the switch is meant to cost
+            // The wheel, the modes and the overdrive are the era's (v2.4); the dash stays as the
+            // fight began with it, because losing it mid-fight is more than the switch should cost
             const { dashCharges, dashCooldownMs } = this.weaponRule();
             this.machine.setRule({ ...rule, dashCharges, dashCooldownMs });
         }

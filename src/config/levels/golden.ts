@@ -33,10 +33,10 @@ export const golden: LevelDef = {
                     { monster: 'slime', weight: 3, group: 3, from: 18 },
                     // 0:30 Bats fly straight over the fountain
                     { monster: 'bat', weight: 3, group: 5, from: 30 },
-                    // 0:50 Just past the first checkpoint: an Ironclad. Blue chips at it; Red bites.
-                    { monster: 'ironclad', weight: 2, from: 50 },
-                    // 1:25 The Golem rolls in and shields whatever is behind it
-                    { monster: 'golem', weight: 1, from: 85 },
+                    // 0:40 An Ironclad. Blue chips at it; Red bites.
+                    { monster: 'ironclad', weight: 3, from: 40 },
+                    // 1:05 The Golem rolls in and shields whatever is behind it
+                    { monster: 'golem', weight: 3, from: 65 },
                     { monster: 'rat', weight: 2, group: 8, from: 85 },
                 ],
             },

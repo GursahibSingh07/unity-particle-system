@@ -390,7 +390,8 @@ export class Title extends Phaser.Scene {
             return;
         }
         this.game.events.emit(Events.UI_SELECT);
-        const sheet = new Phaser.Geom.Rectangle(170, 96, 940, 528);
+        // Tall enough for five rows (God mode was the fifth)
+        const sheet = new Phaser.Geom.Rectangle(170, 52, 940, 610);
         const g = this.add.graphics();
         g.fillStyle(INK, 0.78).fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         panel(g, sheet.x, sheet.y, sheet.width, sheet.height, PAPER, 5, 10);

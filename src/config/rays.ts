@@ -11,7 +11,7 @@ export const RAYS: Record<RayId, RayDef> = {
         name: 'Blue',
         key: 1,
         color: 0x3fa9ff,
-        damage: 12,
+        damage: 16,
         energyCost: 8,
     },
     // Continuous laser: both values are per second, and the damage is what it does point-blank
@@ -30,7 +30,7 @@ export const RAYS: Record<RayId, RayDef> = {
         name: 'Green',
         key: 3,
         color: 0x62f05a,
-        damage: 13,
+        damage: 16,
         energyCost: 28,
     },
     // Defensive: the damage is small, the push is the point
@@ -39,7 +39,7 @@ export const RAYS: Record<RayId, RayDef> = {
         name: 'White',
         key: 4,
         color: 0xfff4d6,
-        damage: 12,
+        damage: 16,
         energyCost: 16,
     },
     // Does no damage of its own: a revealed stealth enemy loses half its health instead
@@ -55,7 +55,7 @@ export const RAYS: Record<RayId, RayDef> = {
 
 /** How much of a ray's damage each class of enemy takes (docs/DESIGN.md section 5) */
 export const RAY_VS_CLASS: Record<RayId, Record<EnemyClass, number>> = {
-    blue: { swarm: 1, armor: 1, speed: 1, stealth: 1, projectile: 1, boss: 1 },
+    blue: { swarm: 1.5, armor: 1, speed: 1, stealth: 1, projectile: 1, boss: 1 },
     red: { swarm: 1, armor: 1.5, speed: 1, stealth: 1, projectile: 1, boss: 1 },
     green: { swarm: 1, armor: 1, speed: 2, stealth: 1, projectile: 1, boss: 1 },
     white: { swarm: 1.5, armor: 0.25, speed: 0.25, stealth: 0.25, projectile: 1.5, boss: 0.25 },
@@ -99,10 +99,10 @@ export const GREEN = {
     /** Any tap fires (v2.2): there is no charge too small */
     minCharge: 0,
     /**
-     * Damage of an uncharged blob as a fraction of a full one. Two thirds means what a full
-     * charge kills in two hits, a tap kills in three.
+     * Damage of an uncharged blob as a fraction of a full one: 11 for a tap, 16 fully charged
+     * (v2.5).
      */
-    minPower: 0.67,
+    minPower: 11 / 16,
     /** How far an uncharged blob travels; a full charge goes the whole `range` */
     minRange: 30,
     /** The Handler walks at this fraction of his speed while charging */
@@ -140,7 +140,7 @@ export const UV = {
     cooldown: 450,
     flashDuration: 300,
     /** Everything caught in the cone is dazzled for this long, hidden or not */
-    stun: 100,
+    stun: 200,
 };
 
 export const WHEEL = {

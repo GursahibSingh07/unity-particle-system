@@ -36,7 +36,8 @@ export const cyberpunk: LevelDef = {
                     // 0:50 Just past the first checkpoint: the skitter, alone
                     { monster: 'skitter', weight: 4, from: 50 },
                     // 1:10 Armour, rarely: the one thing here that Red is for
-                    { monster: 'ironclad', weight: 1, from: 70 },
+                    { monster: 'ironclad', weight: 2, from: 55 },
+                    { monster: 'golem', weight: 2, from: 75 },
                     // 1:35 Past the second checkpoint: bigger flocks, skitters in pairs
                     { monster: 'zigbat', weight: 3, group: 4, from: 95 },
                     { monster: 'skitter', weight: 2, group: 2, from: 105 },

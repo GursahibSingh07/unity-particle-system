@@ -81,3 +81,18 @@ v2.3
 - Also blue cone is strong against "swarm of enemies"
 - Increase blue ray damage to 16.
 - Change the ui to look like a comic book, page 1 (left) should be all the eras arranged like comic panels and page 2 (right) should have controls and stuff like pages inked, guide pages and secrets found.. page 3 (left and right) should be field guide, page 4 (left and right should be the machine), page 5 (left and rtight should be settings and include a button for exiting to home screen.). Page turn should have page turn animations and do not use generic claude game ui colors. make it unique with different font and comic style colors and fonts
+
+v2.4
+
+- Boss too hard, new enemy cap 4, boss spawns 2 every phase change.
+- Boss has 20% less length
+- Revert back the change of phase not affecting guns and all guns being available. Every phase will have only that era's gun mechani.
+- Boss should have a health bar
+
+v2.5 
+
+- Boss still too hard, make 3 attacks between phase changes and phase change timer lasts 3 seconds. Reduce boss health by 10%.
+- Give God mode in settings which gives unlimited health.
+- Reduce armor class health by 15%
+- Increase white ray damage to 16, Uv stun to 0.2 seconds, Increease green ray damage to (11 - 16)
+- Also can you give me al the secrets in the game?

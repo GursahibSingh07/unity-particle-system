@@ -28,7 +28,8 @@ function designed(ray: RayId, enemyClass: EnemyClass): number {
     }
     switch (ray) {
         case 'blue':
-            return 1;
+            // ideas.md v2.3: the cone is strong against a swarm
+            return enemyClass === 'swarm' ? 1.5 : 1;
         case 'red':
             return enemyClass === 'armor' ? 1.5 : 1;
         case 'green':

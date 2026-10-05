@@ -7,6 +7,8 @@ Light Handler was made for TGC GameJam 2026 by Gursahib Singh, Abhishek Bhadiyad
 | Asset | Used for | Source | License |
 | --- | --- | --- | --- |
 | Pixelify Sans (font) by Stefie Justprince | All in-game text | https://fonts.google.com/specimen/Pixelify+Sans (bundled via https://www.npmjs.com/package/@fontsource/pixelify-sans) | SIL Open Font License 1.1 |
+| Bangers (font) by Vernon Adams | Headings in the pause comic book | https://fonts.google.com/specimen/Bangers (bundled via https://www.npmjs.com/package/@fontsource/bangers) | SIL Open Font License 1.1 |
+| Comic Neue (font) by Craig Rozynski | Body text in the pause comic book | https://comicneue.com/ (bundled via https://www.npmjs.com/package/@fontsource/comic-neue) | SIL Open Font License 1.1 |
 
 No other third-party art, audio, models or fonts are used. No paid assets are used.
 

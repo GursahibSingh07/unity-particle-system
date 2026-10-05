@@ -17,5 +17,8 @@ export function worldScale<T extends Sized>(sprite: T, factor = 1): T {
 export function fitCircleBody(sprite: Sized & { body: Phaser.Physics.Arcade.Body }, radius: number) {
     const scale = sprite.scaleX || 1;
     const texels = radius / scale;
-    sprite.body.setCircle(texels, sprite.width / 2 - texels, sprite.height / 2 - texels);
+    // A box of the same reach, not a circle: arcade physics separates boxes cleanly, while its
+    // circle-against-box separation jitters and sticks on corners (the "janky" collisions)
+    sprite.body.setSize(texels * 2, texels * 2, false);
+    sprite.body.setOffset(sprite.width / 2 - texels, sprite.height / 2 - texels);
 }
