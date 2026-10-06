@@ -3,7 +3,7 @@ import type { ArtStyle } from '../../../types';
 import { FRONT_JOINS, frontWindows } from './buildings';
 import { INK, PAPER, type Look } from './looks';
 import { Pix, bayer, desaturate, hash, mix, rgb, tone } from './pix';
-import { CITY_HEIGHT, CITY_WIDTH, EAST, FOUNTAIN_X, FOUNTAIN_Y, MOUTH_X0, MOUTH_X1, MOUTH_Y0, MOUTH_Y1, NORTH, SOUTH, TILE, WEST } from './plan';
+import { CITY_HEIGHT, CITY_WIDTH, EAST, FOUNTAIN_X, FOUNTAIN_Y, MOUTH_X0, MOUTH_X1, MOUTH_Y0, MOUTH_Y1, NORTH, SOUTH, TILE, WEST, eachTile } from './plan';
 
 // Time and use, laid over the square after it is drawn: damp climbing the walls, streaks under
 // the sills, soot, posters, ivy, pipes, moss on the roofs, dirt gathered against the walls, worn
@@ -716,10 +716,72 @@ function chalk(p: Pix, L: Look): void {
     }
 }
 
+/**
+ * Light with a direction. In the sun, the lamp posts lay long shadows to the south-east and
+ * light pours through the gaps between the buildings onto the paving (Eastward's trick). In the
+ * dull Retro dusk, the lamps make dim pools of their own.
+ */
+function light(p: Pix, L: Look): void {
+    const lampTiles: [number, number][] = [];
+    eachTile('o', (x, y) => lampTiles.push([x, y]));
+    if (L.detail === 4) {
+        // From the north-west: one step down for every two across
+        const [sx, sy] = [0.88, 0.47];
+        for (const [x, y] of lampTiles) {
+            const cx = x + TILE / 2;
+            const length = L.style === 'plain' ? 18 : 30;
+            const k = L.style === 'plain' ? 0.6 : 1;
+            for (let t = 4; t < length; t++) {
+                const px = Math.round(cx + 1 + sx * t);
+                const py = Math.round(y + 20 + sy * t);
+                darken(p, L, px, py, (1 - L.shadow) * 1.6 * k);
+                darken(p, L, px, py + 1, (1 - L.shadow) * 1.2 * k);
+            }
+            // The lamp's head at the end of it
+            const hx = Math.round(cx + 1 + sx * length);
+            const hy = Math.round(y + 20 + sy * length);
+            for (let j = -1; j <= 1; j++) {
+                for (let i = -2; i <= 2; i++) {
+                    darken(p, L, hx + i, hy + j, (1 - L.shadow) * 1.4 * k);
+                }
+            }
+        }
+    }
+    if (L.style === 'goldenAge') {
+        // The north side's shadow is broken where the street runs in under the arch
+        const n = L.shadowLength;
+        for (let y = NORTH; y < NORTH + n; y++) {
+            for (let x = MOUTH_X0 + 8 + (y - NORTH); x < MOUTH_X1 - 8 + (y - NORTH); x++) {
+                const i = (y * p.width + x) * 4;
+                p.data[i] /= L.shadow;
+                p.data[i + 1] /= L.shadow;
+                p.data[i + 2] /= L.shadow;
+            }
+        }
+        // And low sun pours in through the west street, fading across the square
+        const sun = '#fff3c8';
+        for (let x = WEST; x < WEST + 90; x++) {
+            const fade = 1 - (x - WEST) / 90;
+            const drop = Math.round((x - WEST) * 0.47);
+            for (let y = MOUTH_Y0 + 4 + drop; y < MOUTH_Y1 - 4 + drop; y++) {
+                if (y < SOUTH) {
+                    p.px(x, y, sun, 0.13 * fade * (0.8 + 0.4 * noise(x / 9, y / 9, 121)));
+                }
+            }
+        }
+    }
+    if (L.detail === 2) {
+        for (const [x, y] of lampTiles) {
+            p.glow(x + TILE / 2, y + 24, 30, 15, L.lampGlass, 0.3);
+        }
+    }
+}
+
 /** The paving: call after the ground and before the buildings and props are drawn */
 export function weatherPaving(p: Pix, L: Look): void {
     weatherGround(p, L);
     chalk(p, L);
+    light(p, L);
 }
 
 /** The ring of buildings: call after they are drawn, before the overhangs and props */
