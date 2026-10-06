@@ -61,11 +61,17 @@ export class Ironclad extends Monster {
     }
 
     stun(duration: number) {
+        if (!this.active) {
+            return;
+        }
         super.stun(duration);
         this.cancelWindup();
     }
 
     knockback(fromX: number, fromY: number, speed: number, duration: number) {
+        if (!this.active) {
+            return;
+        }
         // Too heavy to be thrown about: it only shuffles
         super.knockback(fromX, fromY, speed * 0.3, duration);
     }

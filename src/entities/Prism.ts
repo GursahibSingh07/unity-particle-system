@@ -115,7 +115,7 @@ export class Prism extends Monster {
 
     /** True for a moment after each switch: nothing hurts it, not even an exposure or a shard */
     get shielded() {
-        return this.scene.time.now < this.shieldedUntil;
+        return this.active && this.scene.time.now < this.shieldedUntil;
     }
 
     private get tempo() {
@@ -139,6 +139,9 @@ export class Prism extends Monster {
     }
 
     takeDamage(type: RayId, amount: number): boolean {
+        if (!this.active) {
+            return false;
+        }
         if (type === 'uv' && !this.direct) {
             return this.exposeToUv();
         }
@@ -197,16 +200,23 @@ export class Prism extends Monster {
         if (!this.active) {
             return;
         }
-        // Everything it brought goes with it
-        for (const child of this.world.monsters.getChildren().slice()) {
-            if (child !== this && child.active) {
-                (child as Monster).kill();
+        // Everything it brought goes with it, but on the next tick: the ray that killed it may
+        // still be working through the same enemies, and removing them under it stopped the game
+        const { scene, world } = this;
+        scene.time.delayedCall(0, () => {
+            if (!scene.sys.isActive()) {
+                return;
             }
-        }
-        for (const projectile of this.world.projectiles.getChildren().slice()) {
-            (projectile as Projectile).dissolve();
-        }
-        this.scene.game.events.emit(Events.BOSS_HEALTH, 0, this.def.maxHealth);
+            for (const child of world.monsters.getChildren().slice()) {
+                if (child.active) {
+                    (child as Monster).kill();
+                }
+            }
+            for (const projectile of world.projectiles.getChildren().slice()) {
+                (projectile as Projectile).dissolve();
+            }
+        });
+        scene.game.events.emit(Events.BOSS_HEALTH, 0, this.def.maxHealth);
         super.kill();
     }
 

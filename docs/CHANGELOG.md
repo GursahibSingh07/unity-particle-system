@@ -3,6 +3,10 @@
 How Light Handler's design changed during TGC GameJam 2026, newest first. Each version is a set of design notes written by the team and then built; the notes are kept here in the team's own terms, tidied for spelling. The current design in full is in [DESIGN.md](DESIGN.md).
 
 
+## v3.1
+
+- Fixed bugs
+
 ## v3
 
 - **Art upgrade.** The square felt like basic pixel art: it should feel lived-in and humane, like Rain World, Eastward or Dead Cells, with imperfections and more detail everywhere, not post-processing.

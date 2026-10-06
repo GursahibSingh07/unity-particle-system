@@ -47,11 +47,17 @@ abstract class Thrower extends StandInMonster {
     }
 
     stun(duration: number) {
+        if (!this.active) {
+            return;
+        }
         super.stun(duration);
         this.cancelWindup();
     }
 
     knockback(fromX: number, fromY: number, speed: number, duration: number) {
+        if (!this.active) {
+            return;
+        }
         super.knockback(fromX, fromY, speed, duration);
         this.cancelWindup();
     }

@@ -272,6 +272,17 @@ export class Game extends Phaser.Scene {
     }
 
     update(time: number, delta: number) {
+        // Phaser stops asking for frames if update throws, which freezes the game for good. One
+        // bad frame is better than that: report it (the smoke test fails on any console error)
+        // and carry on.
+        try {
+            this.step(time, delta);
+        } catch (error) {
+            console.error('Game.update failed', error);
+        }
+    }
+
+    private step(time: number, delta: number) {
         this.player.update();
 
         if (this.finished) {
@@ -303,10 +314,14 @@ export class Game extends Phaser.Scene {
         }
         // Copies, because updating can destroy members
         for (const monster of this.monsters.getChildren().slice()) {
-            monster.update(time, delta);
+            if (monster.active) {
+                monster.update(time, delta);
+            }
         }
         for (const projectile of this.projectiles.getChildren().slice()) {
-            projectile.update();
+            if (projectile.active) {
+                projectile.update();
+            }
         }
         // After the player has moved, so ice can make him slide
         this.hazards.update(delta);

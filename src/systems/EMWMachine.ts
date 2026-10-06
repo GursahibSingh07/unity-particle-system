@@ -562,6 +562,9 @@ export class EMWMachine {
         const def = RAYS.blue;
         const { targets, rim, origin } = this.cone('blue', BLUE.range, BLUE.halfAngle, true);
         for (const monster of targets) {
+            if (!monster.active) {
+                continue;
+            }
             monster.takeDamage('blue', def.damage * this.boost);
         }
         const { tipX, tipY } = this.muzzle();
@@ -573,6 +576,9 @@ export class EMWMachine {
         const def = RAYS.uv;
         const { targets, rim, origin } = this.cone('uv', UV.range, UV.halfAngle, false);
         for (const monster of targets) {
+            if (!monster.active) {
+                continue;
+            }
             monster.stun?.(UV.stun);
             const revealed = typeof monster.exposeToUv === 'function' && monster.exposeToUv();
             if (!revealed && monster.active) {
@@ -586,6 +592,9 @@ export class EMWMachine {
         const def = RAYS.white;
         const { x, y } = this.player;
         for (const monster of this.activeMonsters()) {
+            if (!monster.active) {
+                continue;
+            }
             const reach = WHITE.range + monster.def.radius;
             if (Phaser.Math.Distance.Between(x, y, monster.x, monster.y) > reach) {
                 continue;

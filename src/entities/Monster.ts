@@ -177,6 +177,9 @@ export class Monster extends Phaser.GameObjects.Sprite implements Damageable {
 
     /** Returns false if the radiation did nothing at all (the monster is untouchable right now) */
     takeDamage(type: RayId, amount: number): boolean {
+        if (!this.active) {
+            return false;
+        }
         const multiplier = this.multiplierFor(type);
         if (multiplier <= 0 || !this.active) {
             return false;
@@ -227,6 +230,9 @@ export class Monster extends Phaser.GameObjects.Sprite implements Damageable {
 
     /** Freeze in place for `duration` milliseconds */
     stun(duration: number) {
+        if (!this.active) {
+            return;
+        }
         this.stunnedUntil = Math.max(this.stunnedUntil, this.scene.time.now + duration);
         this.body.setVelocity(0, 0);
         this.slowApplied = 1;
@@ -234,6 +240,9 @@ export class Monster extends Phaser.GameObjects.Sprite implements Damageable {
 
     /** Push away from a point and stop acting for `duration` milliseconds */
     knockback(fromX: number, fromY: number, speed: number, duration: number) {
+        if (!this.active) {
+            return;
+        }
         const angle = Phaser.Math.Angle.Between(fromX, fromY, this.x, this.y);
         this.body.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
         this.slowApplied = 1;

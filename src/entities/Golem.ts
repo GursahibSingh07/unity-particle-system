@@ -79,11 +79,17 @@ export class Golem extends Monster {
     }
 
     stun(duration: number) {
+        if (!this.active) {
+            return;
+        }
         super.stun(duration);
         this.rest(this.scene.time.now, GOLEM.rest);
     }
 
     knockback(fromX: number, fromY: number, speed: number, duration: number) {
+        if (!this.active) {
+            return;
+        }
         // Far too heavy to throw: a push only checks it
         super.knockback(fromX, fromY, speed * GOLEM.knockback, duration);
     }

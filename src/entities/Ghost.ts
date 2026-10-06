@@ -39,7 +39,8 @@ export class Ghost extends StandInMonster {
 
     /** True while Ultraviolet has it showing: only then can a ray hurt it */
     get revealed() {
-        return this.scene.time.now < this.revealedUntil;
+        // Asked of a ghost that has just been removed, the answer is simply no
+        return this.active && this.scene.time.now < this.revealedUntil;
     }
 
     get hurtsOnTouch() {
@@ -54,6 +55,9 @@ export class Ghost extends StandInMonster {
     }
 
     takeDamage(type: RayId, amount: number): boolean {
+        if (!this.active) {
+            return false;
+        }
         if (this.exposing) {
             return super.takeDamage(type, amount);
         }

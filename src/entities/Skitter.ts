@@ -76,6 +76,9 @@ export class Skitter extends Monster {
     }
 
     stun(duration: number) {
+        if (!this.active) {
+            return;
+        }
         super.stun(duration);
         if (this.mode === 'windup' || this.mode === 'lunge') {
             this.settle(this.scene.time.now);
