@@ -16,8 +16,13 @@ const INVULNERABLE_MS = 600;
 export const BASE_MAX_HEALTH = 100;
 /** Distance from the player's hands to the tip of the EMW Machine */
 export const MACHINE_LENGTH = 12;
-/** The machine is held this far below the sprite's centre, so it sits in his hands */
-export const MACHINE_DROP = 2;
+/**
+ * Where the machine is held, measured down from the body's anchor (which is at hip height).
+ * Negative lifts it: this puts it at his chest, in his hands. Any lower and it juts from the hips.
+ */
+export const MACHINE_DROP = -4;
+/** How much of the machine's length is drawn when he points it at the viewer */
+const TOWARDS_VIEWER = 0.5;
 
 type Direction = 'down' | 'up' | 'left' | 'right';
 type MoveKeys = Record<Direction, Phaser.Input.Keyboard.Key>;
@@ -265,7 +270,12 @@ export class Player extends Phaser.GameObjects.Container {
     aim(angle: number) {
         this.aimAngle = angle;
         this.machine.rotation = angle;
-        this.lens.setPosition(Math.cos(angle) * (MACHINE_LENGTH - 1), MACHINE_DROP + Math.sin(angle) * (MACHINE_LENGTH - 1));
+        // Pointed at the viewer it is foreshortened: at full length it hung down the middle of
+        // his body from chest to feet, which read as something else entirely
+        const reach = this.facing() === 'down' ? TOWARDS_VIEWER : 1;
+        this.machine.scaleX = this.machine.scaleY * reach;
+        const tip = (MACHINE_LENGTH - 1) * reach;
+        this.lens.setPosition(Math.cos(angle) * tip, MACHINE_DROP + Math.sin(angle) * tip);
         // Holding the machine "behind" the body when facing up
         const depth = this.facing() === 'up' ? -1 : 1;
         this.machine.setDepth(depth);

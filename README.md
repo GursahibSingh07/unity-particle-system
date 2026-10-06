@@ -5,6 +5,8 @@ TGC GameJam 2026 Project
 
 All art is pixel art defined in code, weathered in code (damp, grime, posters, ivy, litter, moss) and printed on a light paper layer, and all music and sound is synthesised at runtime. There are no image or audio files.
 
+itch.io link : https://gss07.itch.io/light-handler
+
 ## Controls
 
 | Input | Action |

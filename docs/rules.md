@@ -18,5 +18,4 @@ Strict code freeze. Code is pulled at the deadline. Backdating on GitHub or itch
 A public browser playable (HTML5 or WebGL) build on itch.io.
 Deliver a complete, stable gameplay loop of 10 to 15 minutes. Playtime beyond 20 minutes (average first playthrough) is not evaluated.
 
-Your game must encorporate All 3 themes (Comic, Twist, Light)
-Design and idea of game is already given to you
+Game must encorporate All 3 themes (Comic, Twist, Light)
