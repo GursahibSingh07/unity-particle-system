@@ -184,3 +184,25 @@ export const LOOK_LIMITS = {
     vignette: 0.6,
     ambientCount: 120,
 };
+
+/** What moves in the square of each era. Colours are 0xRRGGBB; null leaves it still. */
+export interface EraLife {
+    /** Smoke from the chimneys */
+    smoke: number | null;
+    /** Steam from the drain grates */
+    steam: number | null;
+    /** Spray from the fountain */
+    spray: number | null;
+    /** The shop signs glow and now and then stutter */
+    neon: boolean;
+    /** The lamps throw a soft breathing glow */
+    lamps: boolean;
+}
+
+export const LIFE: Record<ArtStyle, EraLife> = {
+    goldenAge: { smoke: 0xf2ede0, steam: null, spray: 0xe8f8ff, neon: false, lamps: false },
+    cyberpunk: { smoke: 0x6f5f96, steam: 0xc9c2ff, spray: 0x8fe8ff, neon: true, lamps: true },
+    retro: { smoke: 0x8f8c74, steam: 0x8f8c74, spray: 0xa9a68a, neon: false, lamps: true },
+    manga: { smoke: 0xd8d8d4, steam: null, spray: 0x141414, neon: false, lamps: false },
+    plain: { smoke: 0xdcdcd8, steam: null, spray: 0xe6f2f6, neon: false, lamps: false },
+};

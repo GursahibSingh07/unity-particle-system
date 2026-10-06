@@ -16,6 +16,7 @@ import { Navigator, castRay, segmentClear, type Point } from '../systems/Navigat
 import { parseRoom, type Rect } from '../systems/roomLayout';
 import type { MonsterId } from '../types';
 import { HandmadeLook } from '../systems/handmade';
+import { CityLife } from '../systems/cityLife';
 
 /** The whole scene is drawn in the one style that is not a comic */
 const STYLE = 'plain';
@@ -177,6 +178,7 @@ export class Ending extends Phaser.Scene {
             .setOrigin(0, 0)
             .setScale(ART_SCALE)
             .setDepth(CITY_OVER_DEPTH);
+        new CityLife(this, STYLE);
     }
 
     /** True if a bystander could stand at this point: on open paving, inside the square */

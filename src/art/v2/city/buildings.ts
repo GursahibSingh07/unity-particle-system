@@ -323,6 +323,23 @@ export function frontWindows(): [number, number, number, number][] {
     return SHOPS.flatMap((shop) => windowXs(shop, 3).map((x): [number, number, number, number] => [x, WINDOW_Y, WINDOW_W, WINDOW_H]));
 }
 
+/** The middle of each north shop's sign board, and whose it is: the neon hangs here */
+export function signSpots(): [number, number, BuildingId][] {
+    return SHOPS.map((shop): [number, number, BuildingId] => [shop.x + shop.w / 2, SIGN_Y + 4, shop.id]);
+}
+
+/** The mouth of every chimney, as drawn by drawSide and drawSouth below: smoke rises here */
+export function chimneySpots(): [number, number][] {
+    const spots: [number, number][] = [];
+    for (const { x } of SIDES) {
+        spots.push([x + 11 + 4, NORTH + 12 + 2], [x + 12 + 4, MOUTH_Y1 + 58 + 2]);
+    }
+    for (const { x, w } of ROOFS) {
+        spots.push([x + 22 + 4, SOUTH + 5 + 2], [x + w - 34 + 4, SOUTH + 19 + 2]);
+    }
+    return spots;
+}
+
 /** Where one north front meets the next: down-pipes run here */
 export const FRONT_JOINS: number[] = [...new Set([...SHOPS.map((shop) => shop.x).filter((x) => x > 0), HALL_X, HALL_X + HALL_W])].sort((a, b) => a - b);
 const ARCH_X = 296;

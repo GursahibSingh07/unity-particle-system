@@ -131,6 +131,12 @@ function segmentDistance(x: number, y: number, ax: number, ay: number, bx: numbe
     return Math.hypot(x - ax - t * dx, y - ay - t * dy);
 }
 
+/** Drain grates in the paving, top-left corners: 12x6, steam rises from them in the dusk */
+export const GRATES: [number, number][] = [
+    [FOUNTAIN_X - 132, SOUTH - 22],
+    [FOUNTAIN_X + 120, NORTH + 30],
+];
+
 /** The lines people walk most: from each street to the fountain */
 const PATHS: [number, number, number, number][] = [
     [FOUNTAIN_X, NORTH, FOUNTAIN_X, FOUNTAIN_Y],
@@ -275,7 +281,7 @@ function weatherGround(p: Pix, L: Look): void {
 
     // Drain grates, one each side of the fountain
     if (L.detail >= 2) {
-        for (const [gx, gy] of [[FOUNTAIN_X - 132, SOUTH - 22], [FOUNTAIN_X + 120, NORTH + 30]]) {
+        for (const [gx, gy] of GRATES) {
             p.rect(gx, gy, 12, 6, mix(L.joint, L.deep, 0.5));
             p.frame(gx - 1, gy - 1, 14, 8, L.joint);
             for (let k = 1; k < 12; k += 2) {
@@ -646,10 +652,10 @@ function windowLife(p: Pix, L: Look): void {
 /** Aerials on the roofs, and in the dusk a dish or two */
 function aerials(p: Pix, L: Look): void {
     const spots: [number, number][] = [
-        [58, SOUTH + 8],
-        [214, SOUTH + 10],
-        [400, SOUTH + 7],
-        [566, SOUTH + 9],
+        [40, SOUTH + 9],
+        [186, SOUTH + 11],
+        [396, SOUTH + 8],
+        [538, SOUTH + 10],
         [16, NORTH + 60],
         [EAST + 18, NORTH + 22],
         [EAST + 16, MOUTH_Y1 + 70],

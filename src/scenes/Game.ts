@@ -25,6 +25,7 @@ import { shake } from '../systems/rayEffects';
 import { floorInFront, parseRoom, type ParsedRoom, type Rect, type RoomTile, mergeRects } from '../systems/roomLayout';
 import { WaveDirector } from '../systems/WaveDirector';
 import { HandmadeLook } from '../systems/handmade';
+import { CityLife } from '../systems/cityLife';
 import type { ArtStyle, LevelDef, MonsterId, RayId, RoomDef, UpgradeId, WeaponRule } from '../types';
 
 /** The square's picture lies under everything; lamp heads and awnings are drawn over everyone, flyers included */
@@ -101,6 +102,8 @@ export class Game extends Phaser.Scene {
     private cityImages: Phaser.GameObjects.Image[] = [];
     /** Paper, grain, wobble and motes over the square (src/config/look.ts) */
     private look: HandmadeLook | null = null;
+    /** Smoke, steam, spray, neon: what moves in the square (src/systems/cityLife.ts) */
+    private life: CityLife | null = null;
     private crack: Crack | null = null;
     /** The cracked walls still standing: the machine reads this same list */
     private secretTiles: RoomTile[] = [];
@@ -130,6 +133,7 @@ export class Game extends Phaser.Scene {
         this.artStyle = this.level.style === 'finalPage' ? 'goldenAge' : this.level.style;
         this.era = null;
         this.cityImages = [];
+        this.life = null;
         this.crack = null;
         this.secretTiles = [];
         this.nextResistSparkAt = 0;
@@ -482,6 +486,7 @@ export class Game extends Phaser.Scene {
                     .setScale(ART_SCALE)
                     .setDepth(CITY_OVER_DEPTH),
             ];
+            this.life = new CityLife(this, this.artStyle);
             return;
         }
         // Not the square: flat colour, so a room that should not exist can still be seen and played
@@ -645,6 +650,7 @@ export class Game extends Phaser.Scene {
         this.artStyle = style;
         this.world.style = style;
         this.look?.setStyle(style);
+        this.life?.setStyle(style);
 
         this.cameras.main.flash(FLOW.styleFlash, 255, 255, 255);
         if (this.textures.exists(`city-${style}`)) {
