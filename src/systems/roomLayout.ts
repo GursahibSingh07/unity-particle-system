@@ -251,3 +251,58 @@ export function mergeRects(tiles: Rect[]): Rect[] {
     }
     return blocks;
 }
+
+const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+
+/**
+ * The square's furniture as it is drawn, not as the tiles it stands on: a lamp's planter is
+ * narrower than its tile and the fountain is round. Bodies the size of the tiles stopped him on
+ * corners that are not there. Takes merged blocks; anything that is neither is left as it is.
+ */
+export function fitFurniture(blocks: Rect[]): Rect[] {
+    const fitted: Rect[] = [];
+    for (const { x, y, width, height } of blocks) {
+        if (width === TILE && height === TILE) {
+            // The tub of a lamp post; the post itself is too thin to stop anyone
+            fitted.push({ x: x + 3, y: y + 6, width: 10, height: 9 });
+        } else if (width === TILE * 2 && height === TILE * 2) {
+            // The fountain's basin: three slabs stepped round its ellipse
+            fitted.push(
+                { x: x + 2, y: y + 9, width: 28, height: 15 },
+                { x: x + 5, y: y + 5, width: 22, height: 23 },
+                { x: x + 10, y: y + 3, width: 12, height: 27 },
+            );
+        } else {
+            fitted.push({ x, y, width, height });
+        }
+    }
+    return fitted;
+}
+
+/**
+ * Walking straight at something and catching only its corner: which way to step aside to get
+ * past. `box` is his body, (dx, dy) the one axis he is pushing along. Returns a unit step along
+ * the other axis, or null when he is not blocked or the way round is further than `reach`.
+ */
+export function cornerSlip(box: Rect, dx: number, dy: number, obstacles: Rect[], reach: number): { x: number; y: number } | null {
+    if ((dx === 0) === (dy === 0)) {
+        return null;
+    }
+    const ahead = { x: box.x + Math.sign(dx), y: box.y + Math.sign(dy), width: box.width, height: box.height };
+    const free = (rect: Rect) => !obstacles.some((obstacle) => overlaps(rect, obstacle));
+    if (free(ahead)) {
+        return null;
+    }
+    const sideways = dx === 0 ? { x: 1, y: 0 } : { x: 0, y: 1 };
+    for (let step = 1; step <= reach; step++) {
+        const open = [-1, 1].filter((sense) => free({ ...ahead, x: ahead.x + sideways.x * sense * step, y: ahead.y + sideways.y * sense * step }));
+        if (open.length === 1) {
+            return dx === 0 ? { x: open[0], y: 0 } : { x: 0, y: open[0] };
+        }
+        if (open.length === 2) {
+            // Square on to something narrower than he is: no side is the nearer one
+            return null;
+        }
+    }
+    return null;
+}

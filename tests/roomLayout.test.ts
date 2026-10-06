@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SQUARE_LAYOUT } from '../src/config/square';
 import { ROOM, ROOM_COLS, ROOM_ROWS, TILE } from '../src/config/world';
-import { floorInFront, parseRoom, validateLayout, validateRoom, mergeRects } from '../src/systems/roomLayout';
+import { cornerSlip, fitFurniture, floorInFront, parseRoom, validateLayout, validateRoom, mergeRects } from '../src/systems/roomLayout';
 import type { ContinuousDef, RoomDef, WaveDef } from '../src/types';
 import { emptyLayout, setTile } from './helpers';
 
@@ -336,5 +336,43 @@ describe('mergeRects', () => {
         const tiles = [tile(0, 0), tile(1, 0), tile(2, 0), tile(0, 1), tile(0, 2), tile(4, 4)];
         const area = mergeRects(tiles).reduce((sum, rect) => sum + rect.width * rect.height, 0);
         expect(area).toBe(tiles.length * 16 * 16);
+    });
+});
+
+describe('fitFurniture', () => {
+    it('keeps every fitted body inside the tiles it stands on, and smaller than them', () => {
+        for (const block of [{ x: 48, y: 68, width: 16, height: 16 }, { x: 144, y: 100, width: 32, height: 32 }]) {
+            const fitted = fitFurniture([block]);
+            expect(fitted.length).toBeGreaterThan(0);
+            for (const rect of fitted) {
+                expect(rect.x).toBeGreaterThan(block.x);
+                expect(rect.y).toBeGreaterThan(block.y);
+                expect(rect.x + rect.width).toBeLessThan(block.x + block.width);
+                expect(rect.y + rect.height).toBeLessThanOrEqual(block.y + block.height);
+            }
+        }
+    });
+
+    it('leaves a block of any other shape alone', () => {
+        const strip = { x: 0, y: 0, width: 48, height: 16 };
+        expect(fitFurniture([strip])).toEqual([strip]);
+    });
+});
+
+describe('cornerSlip', () => {
+    const wall = [{ x: 0, y: 0, width: 16, height: 16 }];
+    const body = (x: number, y: number) => ({ x, y, width: 8, height: 8 });
+
+    it('steps aside when only a corner is in the way', () => {
+        // Walking up, his left 3 units under the block's right end
+        expect(cornerSlip(body(13, 16), 0, -1, wall, 5)).toEqual({ x: 1, y: 0 });
+        expect(cornerSlip(body(-5, 16), 0, -1, wall, 5)).toEqual({ x: -1, y: 0 });
+        expect(cornerSlip(body(16, 13), -1, 0, wall, 5)).toEqual({ x: 0, y: 1 });
+    });
+
+    it('does nothing when the way is clear, when he is square on, or when he moves diagonally', () => {
+        expect(cornerSlip(body(30, 16), 0, -1, wall, 5)).toBeNull();
+        expect(cornerSlip(body(4, 16), 0, -1, wall, 5)).toBeNull();
+        expect(cornerSlip(body(13, 16), 0.7, -0.7, wall, 5)).toBeNull();
     });
 });

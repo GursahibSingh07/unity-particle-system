@@ -22,7 +22,7 @@ import { checkpointSeconds } from '../systems/eraClock';
 import { EraSpawner } from '../systems/EraSpawner';
 import { Navigator } from '../systems/Navigation';
 import { shake } from '../systems/rayEffects';
-import { floorInFront, parseRoom, type ParsedRoom, type Rect, type RoomTile, mergeRects } from '../systems/roomLayout';
+import { floorInFront, parseRoom, type ParsedRoom, type Rect, type RoomTile, fitFurniture, mergeRects } from '../systems/roomLayout';
 import { WaveDirector } from '../systems/WaveDirector';
 import { HandmadeLook } from '../systems/handmade';
 import { CityLife } from '../systems/cityLife';
@@ -165,7 +165,10 @@ export class Game extends Phaser.Scene {
         // and the collider asks which it is by the block's centre
         const walls = new Set(room.walls);
         const furniture = room.solids.filter((tile) => !walls.has(tile));
-        for (const block of [...mergeRects(room.walls), ...mergeRects(furniture)]) {
+        // In the square the furniture is fitted to its picture; the sandbox's props fill their tiles
+        const props = this.sandbox ? mergeRects(furniture) : fitFurniture(mergeRects(furniture));
+        const blocks = [...mergeRects(room.walls), ...props];
+        for (const block of blocks) {
             this.solidBodies.add(this.add.zone(block.x + block.width / 2, block.y + block.height / 2, block.width, block.height));
         }
         this.addCrack(room);
@@ -173,6 +176,7 @@ export class Game extends Phaser.Scene {
         // Every era, and every retry, starts at full health
         const maxHealth = BASE_MAX_HEALTH + Progress.bonusHealth(this.registry);
         this.player = new Player(this, room.start.x, room.start.y, this.artStyle, maxHealth);
+        this.player.obstacles = blocks;
 
         // The walls are passed too, so flyers can plan over the fountain and the furniture
         this.nav = new Navigator(room.solids, room.walls);

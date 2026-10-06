@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { DASH } from '../config/rays';
 import { Events } from '../events';
 import { worldScale } from '../systems/artScale';
+import { cornerSlip, type Rect } from '../systems/roomLayout';
 import type { ArtStyle, WeaponRule } from '../types';
 import { DEPTH, UNDERLAY } from './effects';
 
@@ -10,6 +11,8 @@ const FOOTPRINT = 16;
 /** Much smaller than the sprite on purpose: near misses should feel like misses */
 const BODY_RADIUS = 4;
 const SPEED = 70;
+/** Catching a corner by no more than this, he steps round it instead of stopping dead */
+const CORNER_SLIP = 5;
 const INVULNERABLE_MS = 600;
 
 /** Health before any secrets are found */
@@ -70,6 +73,8 @@ export class Player extends Phaser.GameObjects.Container {
      * false while one of those is up.
      */
     dashAllowed: () => boolean = () => true;
+    /** What stops him, for stepping round corners; the scene hands these over */
+    obstacles: Rect[] = [];
 
     private sprite: Phaser.GameObjects.Sprite;
     private machine: Phaser.GameObjects.Image;
@@ -254,6 +259,11 @@ export class Player extends Phaser.GameObjects.Container {
             return;
         }
 
+        const body = this.body;
+        const slip = moving ? cornerSlip({ x: body.x, y: body.y, width: body.width, height: body.height }, direction.x, direction.y, this.obstacles, CORNER_SLIP) : null;
+        if (slip) {
+            direction.set(slip.x, slip.y);
+        }
         direction.scale(SPEED * this.speedMultiplier);
         this.body.setVelocity(direction.x, direction.y);
 

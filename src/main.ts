@@ -41,6 +41,26 @@ await document.fonts.load('30px "Pixelify Sans"');
 const game = new Phaser.Game(config);
 wireAudio(game);
 
+// Phaser asks for the next frame only after this one returns, so one error thrown anywhere in a
+// frame (a scene, a key handler, a tween) would stop the game for good. Lose the frame instead.
+const step = game.step.bind(game);
+const reported = new Set<string>();
+const safeStep = (time: number, delta: number) => {
+    try {
+        step(time, delta);
+    } catch (error) {
+        const message = error instanceof Error ? (error.stack ?? error.message) : String(error);
+        if (!reported.has(message)) {
+            reported.add(message);
+            console.error('A frame failed and was skipped', error);
+        }
+    }
+};
+game.step = safeStep;
+if (game.isRunning) {
+    game.loop.callback = safeStep;
+}
+
 if (import.meta.env.DEV) {
     // For the automated playthrough in tools/
     (window as unknown as { __game: Phaser.Game }).__game = game;
