@@ -9,6 +9,7 @@ import { burst, burstPoints, controlsRow, halftoneFade, keyCap, panel, pixelNumb
 import { LABELS } from '../ui/labels';
 import { SettingsPanel } from '../ui/SettingsPanel';
 import { BLUE, INK, ORANGE, PAPER, RED, SCREEN_HEIGHT, SCREEN_WIDTH, STYLE_THEME, WHITE, YELLOW, makeText } from '../ui/theme';
+import { HandmadeLook } from '../systems/handmade';
 
 const STYLE = 'goldenAge';
 const HERO = { x: 262, y: 452, scale: 8 };
@@ -54,6 +55,8 @@ export class Title extends Phaser.Scene {
             }
         }
 
+        // The cover is printed like the first page: paper, dots, plates a little out of line
+        new HandmadeLook(this, 'goldenAge', { ambient: false });
         this.drawBackground();
         this.drawMonsters();
         this.drawTown();

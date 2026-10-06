@@ -15,6 +15,7 @@ No other third-party art, audio, models or fonts are used. No paid assets are us
 ## Original assets
 
 - **Art:** every sprite and tile is pixel art defined in this repository's source code (`src/art/`) and drawn to textures when the game starts.
+- **Hand-made look and weathering:** the paper and grain shader (`src/systems/handmade.ts`) and the weathering of the square (`src/art/v2/city/weather.ts`) are written for this game. It uses widely published GLSL idioms (value noise, a fract-based hash, an ordered-dither formula), and Phaser 4's own bloom filters. No texture files are used.
 - **Music and sound:** synthesised at runtime by this repository's own code (`src/audio/`) using the browser's Web Audio API. There are no audio files.
 
 ## Libraries and tools

@@ -19,6 +19,7 @@ import {
     eachTile,
 } from './plan';
 import { drawCrack, drawFountain, drawLamps } from './props';
+import { weatherPaving, weatherWalls } from './weather';
 
 // Composes the whole square for one era. The ground is kept quiet on purpose: characters
 // have to read against it, so the richness goes into the ring of buildings and the props.
@@ -158,10 +159,12 @@ export function paintCity(style: ArtStyle): CityPicture {
     const over = new Pix(CITY_WIDTH, CITY_HEIGHT);
 
     ground(base, L);
+    weatherPaving(base, L);
     drawStreets(base, L);
     drawNorth(base, L);
     drawSides(base, L);
     drawSouth(base, L);
+    weatherWalls(base, L);
 
     const lamps: [number, number][] = [];
     eachTile('o', (x, y) => lamps.push([x, y]));

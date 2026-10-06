@@ -317,6 +317,14 @@ function shopInk(p: Pix, shop: Shop): void {
 const HALL_X = 224;
 const HALL_W = 192;
 const HALL_MID = 320;
+
+/** The upper windows of the north shop fronts, as [x, y, w, h]: someone lives behind them */
+export function frontWindows(): [number, number, number, number][] {
+    return SHOPS.flatMap((shop) => windowXs(shop, 3).map((x): [number, number, number, number] => [x, WINDOW_Y, WINDOW_W, WINDOW_H]));
+}
+
+/** Where one north front meets the next: down-pipes run here */
+export const FRONT_JOINS: number[] = [...new Set([...SHOPS.map((shop) => shop.x).filter((x) => x > 0), HALL_X, HALL_X + HALL_W])].sort((a, b) => a - b);
 const ARCH_X = 296;
 const ARCH_W = 48;
 const ARCH_SPRING = 34;

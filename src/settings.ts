@@ -11,6 +11,8 @@ export interface Settings {
     demoMode: boolean;
     /** Nothing hurts the player */
     godMode: boolean;
+    /** Paper, grain, wobble and ambient motes over the square (src/config/look.ts) */
+    handmadeLook: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -19,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
     screenShake: true,
     demoMode: false,
     godMode: false,
+    handmadeLook: true,
 };
 
 const STORAGE_KEY = 'light-handler.settings';

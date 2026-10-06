@@ -24,6 +24,7 @@ import { Navigator } from '../systems/Navigation';
 import { shake } from '../systems/rayEffects';
 import { floorInFront, parseRoom, type ParsedRoom, type Rect, type RoomTile, mergeRects } from '../systems/roomLayout';
 import { WaveDirector } from '../systems/WaveDirector';
+import { HandmadeLook } from '../systems/handmade';
 import type { ArtStyle, LevelDef, MonsterId, RayId, RoomDef, UpgradeId, WeaponRule } from '../types';
 
 /** The square's picture lies under everything; lamp heads and awnings are drawn over everyone, flyers included */
@@ -98,6 +99,8 @@ export class Game extends Phaser.Scene {
     /** The clock and the spawner of a timed era; null in an era of waves */
     private era: EraSpawner | null = null;
     private cityImages: Phaser.GameObjects.Image[] = [];
+    /** Paper, grain, wobble and motes over the square (src/config/look.ts) */
+    private look: HandmadeLook | null = null;
     private crack: Crack | null = null;
     /** The cracked walls still standing: the machine reads this same list */
     private secretTiles: RoomTile[] = [];
@@ -140,6 +143,7 @@ export class Game extends Phaser.Scene {
     create() {
         this.cameras.main.setZoom(ZOOM).centerOn(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
         this.cameras.main.fadeIn(FLOW.fade, 0, 0, 0);
+        this.look = new HandmadeLook(this, this.artStyle);
         this.physics.world.setBounds(ROOM.x, ROOM.y, ROOM.width, ROOM.height);
 
         if (!this.retry) {
@@ -640,6 +644,7 @@ export class Game extends Phaser.Scene {
         }
         this.artStyle = style;
         this.world.style = style;
+        this.look?.setStyle(style);
 
         this.cameras.main.flash(FLOW.styleFlash, 255, 255, 255);
         if (this.textures.exists(`city-${style}`)) {

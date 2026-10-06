@@ -15,6 +15,7 @@ import { showDialog, showScreen } from '../systems/conversation';
 import { Navigator, castRay, segmentClear, type Point } from '../systems/Navigation';
 import { parseRoom, type Rect } from '../systems/roomLayout';
 import type { MonsterId } from '../types';
+import { HandmadeLook } from '../systems/handmade';
 
 /** The whole scene is drawn in the one style that is not a comic */
 const STYLE = 'plain';
@@ -104,6 +105,7 @@ export class Ending extends Phaser.Scene {
 
         this.cameras.main.setZoom(ZOOM).centerOn(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
         this.cameras.main.fadeIn(ENDING_SCENE.fadeIn, 255, 255, 255);
+        new HandmadeLook(this, STYLE);
         this.physics.world.setBounds(ROOM.x, ROOM.y, ROOM.width, ROOM.height);
 
         // The square he has been defending all along

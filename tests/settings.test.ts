@@ -37,9 +37,9 @@ afterEach(() => {
 });
 
 describe('settings', () => {
-    it('defaults: music 0.7, sound 0.9, screen shake on, demo mode off', async () => {
+    it('defaults: music 0.7, sound 0.9, screen shake on, demo mode off, hand-made look on', async () => {
         const { DEFAULT_SETTINGS, getSettings } = await load(storage);
-        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false });
+        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false, handmadeLook: true });
         expect(getSettings()).toEqual(DEFAULT_SETTINGS);
     });
 
@@ -51,7 +51,7 @@ describe('settings', () => {
     it('reads what was saved, and fills the rest from the defaults', async () => {
         storage.setItem(STORAGE_KEY, JSON.stringify({ musicVolume: 0.2, demoMode: true, godMode: false }));
         const { getSettings } = await load(storage);
-        expect(getSettings()).toEqual({ musicVolume: 0.2, sfxVolume: 0.9, screenShake: true, demoMode: true, godMode: false });
+        expect(getSettings()).toEqual({ musicVolume: 0.2, sfxVolume: 0.9, screenShake: true, demoMode: true, godMode: false, handmadeLook: true });
     });
 
     it('plays with the defaults when what was saved cannot be read', async () => {
@@ -85,18 +85,18 @@ describe('settings', () => {
         const { DEFAULT_SETTINGS, getSettings, updateSettings } = await load(storage);
         expect(getSettings()).not.toBe(DEFAULT_SETTINGS);
         updateSettings({ musicVolume: 0, screenShake: false });
-        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false });
+        expect(DEFAULT_SETTINGS).toEqual({ musicVolume: 0.7, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false, handmadeLook: true });
     });
 
     it('updateSettings merges the change, returns the result and saves all of it', async () => {
         const { getSettings, updateSettings } = await load(storage);
         const result = updateSettings({ musicVolume: 0.3 });
-        expect(result).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false });
+        expect(result).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: false, godMode: false, handmadeLook: true });
         expect(getSettings()).toEqual(result);
         expect(JSON.parse(storage.getItem(STORAGE_KEY)!)).toEqual(result);
 
         updateSettings({ demoMode: true, godMode: false });
-        expect(getSettings()).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: true, godMode: false });
+        expect(getSettings()).toEqual({ musicVolume: 0.3, sfxVolume: 0.9, screenShake: true, demoMode: true, godMode: false, handmadeLook: true });
         expect(JSON.parse(storage.getItem(STORAGE_KEY)!)).toEqual(getSettings());
     });
 
@@ -104,7 +104,7 @@ describe('settings', () => {
         const first = await load(storage);
         first.updateSettings({ sfxVolume: 0.4, screenShake: false });
         const second = await load(storage);
-        expect(second.getSettings()).toEqual({ musicVolume: 0.7, sfxVolume: 0.4, screenShake: false, demoMode: false, godMode: false });
+        expect(second.getSettings()).toEqual({ musicVolume: 0.7, sfxVolume: 0.4, screenShake: false, demoMode: false, godMode: false, handmadeLook: true });
     });
 
     it('watchSettings calls back at once and on every change, until it is stopped', async () => {
