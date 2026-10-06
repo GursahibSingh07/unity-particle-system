@@ -275,12 +275,13 @@ export class UI extends Phaser.Scene {
             return;
         }
         const code = event.code;
-        const pauseKey = code === 'Escape' || code === 'KeyP';
+        // Not Esc: the browser takes Esc to leave fullscreen, and the game must not pause with it
+        const pauseKey = code === 'KeyP';
 
         if (this.page) {
             if (pauseKey) {
-                // Esc first puts away a question the book is asking, then the book
-                if (code !== 'Escape' || !this.page.back()) {
+                // P first puts away a question the book is asking, then the book
+                if (!this.page.back()) {
                     this.closePause();
                 }
             } else if (code === 'Tab' || code === 'KeyQ' || code === 'KeyE') {

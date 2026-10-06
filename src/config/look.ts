@@ -1,7 +1,8 @@
 import type { ArtStyle } from '../types';
 
-// The hand-made layer over each era: a camera shader (paper, grain, wobble, grade, print
-// artefacts) and a few ambient particles. Nothing here changes what the player can hit or be hit
+// The light layer over each era: a colour grade for all, and screen texture only where it means
+// something (Retro is a tired screen: grain and vignette; Manga is ink on paper), plus a few
+// ambient particles. Nothing here changes what the player can hit or be hit
 // by; it only changes how the square is printed. Off with the "Hand-made look" setting.
 
 /** Floating motes over the square. Speeds are world units a second, sizes texture pixels. */
@@ -61,13 +62,13 @@ export const LOOKS: Record<ArtStyle, EraLook> = {
         contrast: 1.04,
         brightness: 1,
         tint: [1, 0.97, 0.9],
-        lift: [0.05, 0.035, 0.02],
-        paper: 0.4,
-        blotch: 0.35,
-        grain: 0.0125,
+        lift: [0, 0, 0],
+        paper: 0,
+        blotch: 0,
+        grain: 0,
         boil: 0,
-        vignette: 0.35,
-        halftone: 0.4,
+        vignette: 0,
+        halftone: 0,
         bloom: 0,
         ambient: {
             kind: 'dust',
@@ -85,12 +86,12 @@ export const LOOKS: Record<ArtStyle, EraLook> = {
         contrast: 1.08,
         brightness: 1,
         tint: [0.95, 0.95, 1.05],
-        lift: [0.03, 0.02, 0.06],
-        paper: 0.3,
-        blotch: 0.25,
-        grain: 0.0175,
+        lift: [0, 0, 0],
+        paper: 0,
+        blotch: 0,
+        grain: 0,
         boil: 0,
-        vignette: 0.5,
+        vignette: 0,
         halftone: 0,
         bloom: 0.7,
         ambient: {
@@ -110,11 +111,11 @@ export const LOOKS: Record<ArtStyle, EraLook> = {
         brightness: 0.98,
         tint: [1, 1, 0.94],
         lift: [0.04, 0.045, 0.03],
-        paper: 0.35,
-        blotch: 0.45,
-        grain: 0.0225,
+        paper: 0,
+        blotch: 0.35,
+        grain: 0.03,
         boil: 0,
-        vignette: 0.55,
+        vignette: 0.45,
         halftone: 0,
         bloom: 0,
         ambient: {
@@ -136,9 +137,9 @@ export const LOOKS: Record<ArtStyle, EraLook> = {
         lift: [0.06, 0.06, 0.06],
         paper: 0.45,
         blotch: 0.3,
-        grain: 0.0125,
+        grain: 0,
         boil: 0.25,
-        vignette: 0.25,
+        vignette: 0,
         halftone: 0,
         bloom: 0,
         ambient: {
@@ -157,12 +158,12 @@ export const LOOKS: Record<ArtStyle, EraLook> = {
         contrast: 1,
         brightness: 1.02,
         tint: [1, 1, 0.98],
-        lift: [0.02, 0.02, 0.02],
-        paper: 0.15,
-        blotch: 0.15,
-        grain: 0.01,
+        lift: [0, 0, 0],
+        paper: 0,
+        blotch: 0,
+        grain: 0,
         boil: 0,
-        vignette: 0.2,
+        vignette: 0,
         halftone: 0,
         bloom: 0,
         ambient: {
@@ -175,6 +176,16 @@ export const LOOKS: Record<ArtStyle, EraLook> = {
             lifespan: [8000, 12000],
         },
     },
+};
+
+/** The cover is a printed comic: Golden's colours on paper, with faint halftone dots */
+export const COVER_LOOK: EraLook = {
+    ...LOOKS.goldenAge,
+    lift: [0.05, 0.035, 0.02],
+    paper: 0.4,
+    blotch: 0.3,
+    halftone: 0.4,
+    ambient: null,
 };
 
 /** Keeps every era readable: what a test holds the numbers to */

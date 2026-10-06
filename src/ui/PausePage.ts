@@ -796,7 +796,7 @@ export class PausePage {
         const g = scene.add.graphics();
         spread.right.add(g);
         const rowHeight = 36;
-        const rows = [...LABELS.settingsKeys, { keys: ['ESC'], action: LABELS.resume.replace(/^ESC\s+/, '') }];
+        const rows = [...LABELS.settingsKeys, { keys: ['P'], action: LABELS.resume.replace(/^P\s+/, '') }];
         let actionX = x + 110;
         const placed = rows.map((row, index) => {
             const cy = top + index * rowHeight + rowHeight / 2;

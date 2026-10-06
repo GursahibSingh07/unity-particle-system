@@ -15,7 +15,9 @@ All art is pixel art defined in code, weathered in code (damp, grime, posters, i
 | Q / E | Turn the colour wheel |
 | F | Switch mode (RGB, UV, Unprism) |
 | Space | Dash |
-| Esc | Pause: the pages, the Field Guide, Settings |
+| P | Pause: the pages, the Field Guide, Settings |
+| S (on the cover) | Settings |
+| Esc | Leaves fullscreen (the game never uses it) |
 
 ## Documents
 

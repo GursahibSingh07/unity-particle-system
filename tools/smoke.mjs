@@ -117,7 +117,7 @@ const KEYS = {
     x: letter('x'),
     space: { key: ' ', code: 'Space', vk: 32 },
     enter: { key: 'Enter', code: 'Enter', vk: 13 },
-    escape: { key: 'Escape', code: 'Escape', vk: 27 },
+    pause: { key: 'p', code: 'KeyP', vk: 80 },
     left: { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37 },
     up: { key: 'ArrowUp', code: 'ArrowUp', vk: 38 },
     right: { key: 'ArrowRight', code: 'ArrowRight', vk: 39 },
@@ -1517,8 +1517,8 @@ async function checkClock(continuous, tag) {
     }
     note(`the clock counts down in real time (${ran.toFixed(2)}s in ${real.toFixed(2)}s; ${second.era.secondsLeft}s left)`);
 
-    await tap(KEYS.escape);
-    await waitEvent('the pause page to open on Esc', eventNames.PAUSED, second.seq, TIMEOUT.event, (args) => args[0] === true);
+    await tap(KEYS.pause);
+    await waitEvent('the pause page to open on P', eventNames.PAUSED, second.seq, TIMEOUT.event, (args) => args[0] === true);
     const paused = await look();
     if (!paused.gamePaused) {
         fail('The pause page opened but the Game scene is not paused');
@@ -1529,14 +1529,14 @@ async function checkClock(continuous, tag) {
     if (Math.abs(still.era.elapsed - paused.era.elapsed) > 0.001) {
         fail(`The clock moved from ${paused.era.elapsed.toFixed(2)}s to ${still.era.elapsed.toFixed(2)}s under the pause page`);
     }
-    await tap(KEYS.escape);
-    await waitEvent('the pause page to close on Esc', eventNames.PAUSED, still.seq, TIMEOUT.event, (args) => args[0] === false);
+    await tap(KEYS.pause);
+    await waitEvent('the pause page to close on P', eventNames.PAUSED, still.seq, TIMEOUT.event, (args) => args[0] === false);
     await sleep(1500);
     const resumed = await look();
     if (resumed.gamePaused || resumed.era.elapsed < still.era.elapsed + 0.7) {
         fail(`After resuming, the clock went from ${still.era.elapsed.toFixed(2)}s to ${resumed.era.elapsed.toFixed(2)}s in 1.5s`);
     }
-    note(`Esc pauses (clock held at ${still.era.elapsed.toFixed(1)}s for 1.5s) and resumes`);
+    note(`P pauses (clock held at ${still.era.elapsed.toFixed(1)}s for 1.5s) and resumes`);
 }
 
 /** Presses K (dev key) until the era is over; returns the state once LEVEL_CLEARED has been seen */
@@ -2292,7 +2292,7 @@ async function settingsStep() {
         await screenshot('settings-changed');
         note(`music volume 0.7 -> ${volume} and demo mode on, saved in localStorage: ${JSON.stringify(stored)}`);
 
-        await tap(KEYS.escape);
+        await tap(KEYS.s);
         const select = await waitFor('the cover to offer the eras', TIMEOUT.event, (state) =>
             content.levels.every((level) => state.texts.some((text) => String(text) === level.name)) ? state : false,
         );
@@ -2348,7 +2348,7 @@ async function settingsStep() {
             const now = state.storage ? JSON.parse(state.storage) : null;
             return now && now.demoMode === false && Math.abs(now.musicVolume - 0.7) < 1e-9;
         });
-        await tap(KEYS.escape);
+        await tap(KEYS.s);
         await sleep(300);
         note('music volume and demo mode put back through the settings sheet');
     } finally {

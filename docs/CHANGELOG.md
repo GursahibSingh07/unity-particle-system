@@ -3,6 +3,15 @@
 How Light Handler's design changed during TGC GameJam 2026, newest first. Each version is a set of design notes written by the team and then built; the notes are kept here in the team's own terms, tidied for spelling. The current design in full is in [DESIGN.md](DESIGN.md).
 
 
+## v3
+
+- **Art upgrade.** The square felt like basic pixel art: it should feel lived-in and humane, like Rain World, Eastward or Dead Cells, with imperfections and more detail everywhere, not post-processing.
+- **Weathering** on every building and stone: damp, streaks under the sills, soot, posters, ivy, down-pipes, curtains and plants in the windows, moss and aerials on the roofs, dirt and grass against the walls, worn paths, litter, a chalk hopscotch. Each era wears differently; the ending is the most lived-in. Nothing that looks like a crack, so the secrets stay fair.
+- **Motion:** smoke from the chimneys, spray from the fountain, steam from the grates, breathing lamps, neon signs that stutter. Nothing that flies, so nothing is mistaken for a bat.
+- **Light:** long lamp shadows, sun through the gaps in Golden, lamp pools in Retro.
+- **Screen effects only where they make sense:** grain and vignette in Retro only, paper in Manga and on the cover. A light colour grade for every era, a glow round the neon in Cyberpunk, a few particles in the air.
+- **Pause is P, not Esc:** Esc left fullscreen and paused the game at the same time. Settings on the cover open and close with S.
+
 ## v2.6
 
 - **Boss buff** Phase-change lasts 2 seconds now. Invulnerability 1 second after phase-change.

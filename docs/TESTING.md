@@ -61,7 +61,7 @@ What it does:
     - an empty wheel (Manga): Q and E do nothing, White fires;
     - the mode key: F goes through every mode the rule has, UV and White fire, and with one mode F does nothing;
     - the dash: each charge is a `DASHED` and moves him, an empty dash is refused, a charge comes back; in Golden, Space does nothing.
-4. **Timed eras** (Golden, Cyberpunk, Retro, Manga). The clock runs in real time for three seconds, stands still for a second and a half under the pause page (Esc) and runs again. Then K winds it to zero: at least one `CHECKPOINT`, exactly one `SURGE`, the timer at 0, and the next era starts.
+4. **Timed eras** (Golden, Cyberpunk, Retro, Manga). The clock runs in real time for three seconds, stands still for a second and a half under the pause page (P) and runs again. Then K winds it to zero: at least one `CHECKPOINT`, exactly one `SURGE`, the timer at 0, and the next era starts.
 5. **Boss.** The Prism is announced away from the player. `BOSS_TELEGRAPH` is followed by `ERA_SWAPPED` to the same era after the time it stated; the square and the machine's rule follow. K fells it.
 6. **Ending.** The Ending scene is drawn. K takes the torch away and skips the first captions; the officer's lines, the report (down to the charge), the corrected Field Guide and the credits are read with Space. The cover comes back alone, and a second new game starts clean: era 1, nothing owned, the item card shown again.
 7. **Death**, without `nodamage`, in a timed era (sandbox room 12): the retry picks its clock up from the last checkpoint, with full health. (Every shipped era is timed, so the old check that a death restarts the wave is kept in the script, `goldenDeathStep`, but not run.)

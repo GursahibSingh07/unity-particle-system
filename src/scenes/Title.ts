@@ -9,6 +9,7 @@ import { burst, burstPoints, controlsRow, halftoneFade, keyCap, panel, pixelNumb
 import { LABELS } from '../ui/labels';
 import { SettingsPanel } from '../ui/SettingsPanel';
 import { BLUE, INK, ORANGE, PAPER, RED, SCREEN_HEIGHT, SCREEN_WIDTH, STYLE_THEME, WHITE, YELLOW, makeText } from '../ui/theme';
+import { COVER_LOOK } from '../config/look';
 import { HandmadeLook } from '../systems/handmade';
 
 const STYLE = 'goldenAge';
@@ -55,8 +56,8 @@ export class Title extends Phaser.Scene {
             }
         }
 
-        // The cover is printed like the first page: paper, dots, plates a little out of line
-        new HandmadeLook(this, 'goldenAge', { ambient: false });
+        // The cover is a printed comic: paper and faint halftone dots
+        new HandmadeLook(this, 'goldenAge', { look: COVER_LOOK });
         this.drawBackground();
         this.drawMonsters();
         this.drawTown();
@@ -86,7 +87,8 @@ export class Title extends Phaser.Scene {
             return;
         }
         if (this.settings) {
-            if (event.code === 'Escape') {
+            // S closes the sheet it opened (not Esc, which the browser keeps for leaving fullscreen)
+            if (event.code === 'KeyS') {
                 this.closeSettings();
             } else {
                 this.settings.panel.key(event.code);

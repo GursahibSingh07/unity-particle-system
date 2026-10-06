@@ -19,7 +19,7 @@ export const LABELS = {
     noWeakness: 'no ray in particular',
     switchTabs: 'Q / E  turn the page',
     demoJump: '1 - 5  jump to an era',
-    resume: 'ESC  back to the action',
+    resume: 'P  back to the action',
     cornerHint: 'or click a page corner',
     controlsTitle: 'HOW TO PLAY',
     tallyTitle: 'THE STORY SO FAR',
@@ -80,7 +80,7 @@ export const LABELS = {
     exitAskNote: 'Everything inked so far will be lost.',
     exitStay: 'STAY',
     exitLeave: 'LEAVE',
-    settingsBack: 'ESC  back to the cover',
+    settingsBack: 'S  back to the cover',
     settingsAction: 'Settings',
     eraSelect: 'DEMO MODE: PICK AN ERA',
 } as const;
@@ -105,5 +105,5 @@ export const CONTROLS: { keys: string[]; action: string; detail: string }[] = [
     { keys: ['Q', 'E'], action: 'Wheel', detail: 'Turn the colour wheel' },
     { keys: ['F'], action: 'Mode', detail: 'Switch mode: RGB, UV, White' },
     { keys: ['SPACE'], action: 'Dash', detail: 'Dash' },
-    { keys: ['ESC'], action: 'Pause', detail: 'Pause: this book' },
+    { keys: ['P'], action: 'Pause', detail: 'Pause: this book' },
 ];

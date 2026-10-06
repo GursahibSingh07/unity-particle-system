@@ -216,11 +216,11 @@ export class HandmadeLook {
     private enabled: boolean;
     private readonly stopWatching: () => void;
 
-    /** `ambient: false` leaves the motes out (the cover is a printed page, not a place) */
+    /** `look` replaces the era's own look (the cover is a printed page, not a place) */
     constructor(
         private readonly scene: Phaser.Scene,
         style: ArtStyle,
-        private readonly options: { ambient?: boolean } = {},
+        private readonly options: { look?: EraLook } = {},
     ) {
         this.style = style;
         this.enabled = getSettings().handmadeLook;
@@ -233,7 +233,7 @@ export class HandmadeLook {
             // The glow goes first, so the paper and grain are printed over it
             const [bloom] = Phaser.Actions.AddEffectBloom(camera, { threshold: 0.62, blurRadius: 3, blurSteps: 4 });
             this.bloom = bloom.parallelFilters;
-            this.filter = camera.filters.external.add(new HandmadeFilter(camera, LOOKS[style])) as HandmadeFilter;
+            this.filter = camera.filters.external.add(new HandmadeFilter(camera, options.look ?? LOOKS[style])) as HandmadeFilter;
         }
         this.apply();
         this.stopWatching = watchSettings((settings) => {
@@ -253,7 +253,7 @@ export class HandmadeLook {
     }
 
     private apply() {
-        const look = LOOKS[this.style];
+        const look = this.options.look ?? LOOKS[this.style];
         if (this.filter) {
             this.filter.look = look;
             this.filter.setActive(this.enabled);
@@ -263,7 +263,7 @@ export class HandmadeLook {
             this.bloom.setActive(this.enabled && look.bloom > 0);
         }
         this.ambient?.destroy();
-        this.ambient = this.enabled && look.ambient && this.options.ambient !== false ? emitAmbient(this.scene, look.ambient) : null;
+        this.ambient = this.enabled && look.ambient ? emitAmbient(this.scene, look.ambient) : null;
     }
 
     destroy() {

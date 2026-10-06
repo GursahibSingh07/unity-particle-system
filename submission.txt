@@ -69,7 +69,7 @@ Left mouse button   Fire (hold for the red laser; hold and release for
 Q / E               Turn the colour wheel
 F                   Switch mode: colour wheel, UV lens, white light
 Space               Dash
-Esc                 Pause (opens the comic book: eras, Field Guide,
+P                   Pause (opens the comic book: eras, Field Guide,
                     the machine, settings)
 
 The five rays:
@@ -151,7 +151,7 @@ checkpoint, a heart is waiting near the start. It is never announced.
 DEMO MODE AND GOD MODE (FOR JUDGES)
 ====================================================================
 
-Both are in Settings. Open Settings with S on the cover, or with Esc during
+Both are in Settings. Open Settings with S on the cover, or with P during
 play (last pages of the pause book). Both are off by default and are saved
 in the browser.
 
